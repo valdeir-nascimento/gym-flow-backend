@@ -15,10 +15,10 @@ import java.util.List;
  */
 public final class TrainingValidator {
 
-    private TrainingValidator() {}
+    private TrainingValidator() {
+    }
 
-    public static Result<TrainingDraft> validate(String name, String objective, LocalDate startDate,
-                                                 LocalDate endDate, List<TrainingItem> items) {
+    public static Result<TrainingDraft> validate(String name, String objective, LocalDate startDate, LocalDate endDate, List<TrainingItem> items) {
         Notification notification = Notification.empty();
 
         String parsedName = parseName(name, notification);
@@ -36,7 +36,7 @@ public final class TrainingValidator {
         return notification.hasErrors()
             ? Result.failure(notification)
             : Result.success(new TrainingDraft(
-                parsedName, blankToNull(objective), new TrainingPeriod(startDate, endDate), List.copyOf(items)));
+            parsedName, blankToNull(objective), new TrainingPeriod(startDate, endDate), List.copyOf(items)));
     }
 
     private static void validateItems(List<TrainingItem> items, Notification notification) {

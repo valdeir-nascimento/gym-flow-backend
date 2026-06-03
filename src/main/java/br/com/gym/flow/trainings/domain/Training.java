@@ -36,9 +36,18 @@ public class Training extends AggregateRoot<TrainingId> {
     private final Instant createdAt;
     private Instant updatedAt;
 
-    private Training(TrainingId id, UUID studentId, UUID instructorId, String name, String objective,
-                     TrainingPeriod period, TrainingStatus status, List<TrainingItem> items,
-                     Instant createdAt, Instant updatedAt) {
+    private Training(
+        final TrainingId id,
+        final UUID studentId,
+        final UUID instructorId,
+        final String name,
+        final String objective,
+        final TrainingPeriod period,
+        final TrainingStatus status,
+        final List<TrainingItem> items,
+        final Instant createdAt,
+        final Instant updatedAt
+    ) {
         super(id);
         this.studentId = studentId;
         this.instructorId = instructorId;
@@ -56,19 +65,42 @@ public class Training extends AggregateRoot<TrainingId> {
             throw new IllegalArgumentException("a training must contain at least one item");
         }
         Instant now = Instant.now(clock);
-        Training training = new Training(TrainingId.newId(), studentId, instructorId,
-            draft.name(), draft.objective(), draft.period(), TrainingStatus.ACTIVE, draft.items(), now, now);
+
+        Training training = new Training(
+            TrainingId.newId(),
+            studentId,
+            instructorId,
+            draft.name(),
+            draft.objective(),
+            draft.period(),
+            TrainingStatus.ACTIVE,
+            draft.items(),
+            now,
+            now
+        );
+
         training.registerEvent(TrainingCreated.of(training.id().value(), studentId, instructorId, now));
         return training;
     }
 
-    public static Training hydrate(TrainingId id, UUID studentId, UUID instructorId, String name, String objective,
-                                   TrainingPeriod period, TrainingStatus status, List<TrainingItem> items,
-                                   Instant createdAt, Instant updatedAt) {
+    public static Training hydrate(
+        final TrainingId id,
+        final UUID studentId,
+        final UUID instructorId,
+        final String name,
+        final String objective,
+        final TrainingPeriod period,
+        final TrainingStatus status,
+        final List<TrainingItem> items,
+        final Instant createdAt,
+        final Instant updatedAt
+    ) {
         return new Training(id, studentId, instructorId, name, objective, period, status, items, createdAt, updatedAt);
     }
 
-    /** Ownership rule (RNF-001): a training belongs to the instructor who created it. */
+    /**
+     * Ownership rule (RNF-001): a training belongs to the instructor who created it.
+     */
     public boolean isOwnedBy(UUID userId) {
         return instructorId.equals(userId);
     }
