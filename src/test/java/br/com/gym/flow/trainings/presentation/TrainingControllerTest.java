@@ -9,6 +9,9 @@ import br.com.gym.flow.shared.observability.MdcRequestFilter;
 import br.com.gym.flow.trainings.application.usecase.CreateTrainingCommand;
 import br.com.gym.flow.trainings.application.usecase.CreateTrainingUseCase;
 import br.com.gym.flow.trainings.application.usecase.GetTrainingUseCase;
+import br.com.gym.flow.trainings.application.usecase.UpdateTrainingCommand;
+import br.com.gym.flow.trainings.application.usecase.UpdateTrainingUseCase;
+import br.com.gym.flow.trainings.domain.TrainingStatus;
 import br.com.gym.flow.trainings.domain.spi.TrainingItemView;
 import br.com.gym.flow.trainings.domain.spi.TrainingView;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,6 +41,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -62,6 +66,8 @@ class TrainingControllerTest {
 
     @MockitoBean
     private CreateTrainingUseCase createTraining;
+    @MockitoBean
+    private UpdateTrainingUseCase updateTraining;
     @MockitoBean
     private GetTrainingUseCase getTraining;
 
@@ -184,6 +190,82 @@ class TrainingControllerTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(json(request(List.of(validItem())))))
                 .andExpect(status().isUnprocessableEntity());
+        }
+    }
+
+    @Nested
+    class Update {
+
+        private UpdateTrainingRequest updateRequest() {
+            return new UpdateTrainingRequest("Treino B", "Hipertrofia", START, END, List.of(validItem()), null);
+        }
+
+        @Test
+        void givenValidRequest_whenUpdating_thenReturns200AndMapsCommand() throws Exception {
+            // Given
+            when(updateTraining.execute(any())).thenReturn(Result.success(view()));
+
+            // When / Then
+            mockMvc.perform(put("/trainings/{id}", TRAINING_ID)
+                    .header("X-User-Id", INSTRUCTOR_ID)
+                    .header("X-User-Role", "INSTRUCTOR")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(json(updateRequest())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(TRAINING_ID.toString()));
+
+            // Then — path id + headers + body mapped into the command
+            var captor = ArgumentCaptor.forClass(UpdateTrainingCommand.class);
+            verify(updateTraining).execute(captor.capture());
+            assertThat(captor.getValue().trainingId().value()).isEqualTo(TRAINING_ID);
+            assertThat(captor.getValue().name()).isEqualTo("Treino B");
+            assertThat(captor.getValue().actorId()).isEqualTo(INSTRUCTOR_ID);
+            assertThat(captor.getValue().actorRole()).isEqualTo("INSTRUCTOR");
+            assertThat(captor.getValue().items()).singleElement()
+                .satisfies(item -> assertThat(item.exerciseId()).isEqualTo(EXERCISE_ID));
+            verifyNoMoreInteractions(updateTraining);
+        }
+
+        @Test
+        void givenUnknownTraining_whenUpdating_thenReturns404() throws Exception {
+            // Given
+            when(updateTraining.execute(any())).thenReturn(Result.failWith(ErrorCode.TRAINING_NOT_FOUND));
+
+            // When / Then
+            mockMvc.perform(put("/trainings/{id}", TRAINING_ID)
+                    .header("X-User-Id", INSTRUCTOR_ID)
+                    .header("X-User-Role", "INSTRUCTOR")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(json(updateRequest())))
+                .andExpect(status().isNotFound());
+        }
+
+        @Test
+        void givenActorWithoutPermission_whenUpdating_thenReturns403() throws Exception {
+            // Given
+            when(updateTraining.execute(any())).thenReturn(Result.failWith(ErrorCode.TRAINING_NOT_OWNED));
+
+            // When / Then
+            mockMvc.perform(put("/trainings/{id}", TRAINING_ID)
+                    .header("X-User-Id", INSTRUCTOR_ID)
+                    .header("X-User-Role", "INSTRUCTOR")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(json(updateRequest())))
+                .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void givenArchivedTraining_whenUpdating_thenReturns409() throws Exception {
+            // Given
+            when(updateTraining.execute(any())).thenReturn(Result.failWith(ErrorCode.TRAINING_ARCHIVED));
+
+            // When / Then — CONFLICT category -> 409
+            mockMvc.perform(put("/trainings/{id}", TRAINING_ID)
+                    .header("X-User-Id", INSTRUCTOR_ID)
+                    .header("X-User-Role", "INSTRUCTOR")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(json(updateRequest())))
+                .andExpect(status().isConflict());
         }
     }
 

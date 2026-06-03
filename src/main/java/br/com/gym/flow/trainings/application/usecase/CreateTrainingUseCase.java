@@ -1,14 +1,12 @@
 package br.com.gym.flow.trainings.application.usecase;
 
 import br.com.gym.flow.exercises.domain.spi.ExerciseCatalog;
-import br.com.gym.flow.exercises.domain.spi.ExerciseView;
 import br.com.gym.flow.shared.application.CommandUseCase;
 import br.com.gym.flow.shared.domain.ErrorCode;
 import br.com.gym.flow.shared.domain.Result;
 import br.com.gym.flow.trainings.application.service.TrainingViewMapper;
 import br.com.gym.flow.trainings.domain.Training;
 import br.com.gym.flow.trainings.domain.TrainingDraft;
-import br.com.gym.flow.trainings.domain.TrainingItem;
 import br.com.gym.flow.trainings.domain.TrainingRepository;
 import br.com.gym.flow.trainings.domain.TrainingValidator;
 import br.com.gym.flow.trainings.domain.spi.TrainingView;
@@ -63,7 +61,7 @@ public class CreateTrainingUseCase implements CommandUseCase<CreateTrainingComma
         }
 
         // Every referenced exercise must exist (400) and be active (422).
-        Result<Void> exercises = validateExercises(draft);
+        Result<Void> exercises = CatalogChecks.allExercisesActive(catalog, draft.items());
         if (!exercises.isSuccess()) {
             return Result.failure(((Result.Failure<Void>) exercises).notification());
         }
@@ -77,18 +75,5 @@ public class CreateTrainingUseCase implements CommandUseCase<CreateTrainingComma
         Training saved = trainings.save(training);
         training.pullDomainEvents().forEach(events::publishEvent);
         return Result.success(TrainingViewMapper.toView(saved));
-    }
-
-    private Result<Void> validateExercises(TrainingDraft draft) {
-        for (TrainingItem item : draft.items()) {
-            Optional<ExerciseView> exercise = catalog.findById(item.exerciseId());
-            if (exercise.isEmpty()) {
-                return Result.failWith(ErrorCode.INVALID_INPUT, "exercício inexistente no catálogo: " + item.exerciseId());
-            }
-            if (!ACTIVE.equals(exercise.get().status())) {
-                return Result.failWith(ErrorCode.TRAINING_INACTIVE_EXERCISE);
-            }
-        }
-        return Result.ok();
     }
 }
