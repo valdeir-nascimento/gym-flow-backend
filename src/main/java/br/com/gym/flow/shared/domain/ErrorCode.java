@@ -32,6 +32,13 @@ public enum ErrorCode {
     EXERCISE_NAME_TAKEN(ErrorCategory.CONFLICT, "nome de exercício já cadastrado"),
     EXERCISE_ALREADY_INACTIVE(ErrorCategory.BUSINESS_RULE, "exercício já inativado"),
 
+    // Training (RF-004)
+    TRAINING_NOT_FOUND(ErrorCategory.NOT_FOUND, "treino não encontrado"),
+    TRAINING_INSTRUCTOR_NOT_LINKED(ErrorCategory.FORBIDDEN, "professor não vinculado ao aluno"),
+    TRAINING_STUDENT_INACTIVE(ErrorCategory.BUSINESS_RULE, "aluno inativo não pode receber treino"),
+    TRAINING_INACTIVE_EXERCISE(ErrorCategory.BUSINESS_RULE, "exercício inativo não pode compor o treino"),
+    TRAINING_OVERLAPPING_PERIOD(ErrorCategory.BUSINESS_RULE, "já existe treino ativo com vigência sobreposta"),
+
     // Authentication (RF-003)
     INVALID_CREDENTIALS(ErrorCategory.UNAUTHORIZED, "credenciais inválidas"),
     ACCOUNT_LOCKED(ErrorCategory.UNAUTHORIZED, "conta temporariamente bloqueada"),
