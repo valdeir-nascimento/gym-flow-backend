@@ -5,6 +5,8 @@ import br.com.gym.flow.trainings.application.usecase.CreateTrainingCommand;
 import br.com.gym.flow.trainings.application.usecase.CreateTrainingUseCase;
 import br.com.gym.flow.trainings.application.usecase.GetTrainingQuery;
 import br.com.gym.flow.trainings.application.usecase.GetTrainingUseCase;
+import br.com.gym.flow.trainings.application.usecase.UpdateTrainingCommand;
+import br.com.gym.flow.trainings.application.usecase.UpdateTrainingUseCase;
 import br.com.gym.flow.trainings.domain.TrainingId;
 import br.com.gym.flow.trainings.domain.TrainingItem;
 import br.com.gym.flow.trainings.domain.spi.TrainingView;
@@ -16,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,6 +34,7 @@ import java.util.UUID;
 class TrainingController {
 
     private final CreateTrainingUseCase createTraining;
+    private final UpdateTrainingUseCase updateTraining;
     private final GetTrainingUseCase getTraining;
 
     @PostMapping
@@ -48,6 +52,19 @@ class TrainingController {
             response.setHeader(HttpHeaders.LOCATION, "/trainings/" + result.getOrThrow().id());
         }
         return result;
+    }
+
+    @PutMapping("/{id}")
+    Result<TrainingView> update(@PathVariable UUID id,
+                                @Valid @RequestBody UpdateTrainingRequest req,
+                                @RequestHeader("X-User-Id") UUID actorId,
+                                @RequestHeader("X-User-Role") String actorRole) {
+        List<TrainingItem> items = req.items().stream()
+            .map(i -> new TrainingItem(i.exerciseId(), i.sets(), i.repetitions(), i.load(), i.restSeconds()))
+            .toList();
+        return updateTraining.execute(new UpdateTrainingCommand(
+            TrainingId.of(id), req.name(), req.objective(), req.startDate(), req.endDate(),
+            items, req.status(), actorId, actorRole));
     }
 
     @GetMapping("/{id}")
