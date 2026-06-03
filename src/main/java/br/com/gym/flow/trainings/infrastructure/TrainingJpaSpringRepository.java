@@ -1,5 +1,7 @@
 package br.com.gym.flow.trainings.infrastructure;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -8,6 +10,9 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 interface TrainingJpaSpringRepository extends JpaRepository<TrainingJpaEntity, UUID> {
+
+    /** Page of a student's trainings (RF-006); ordering comes from the Pageable. */
+    Page<TrainingJpaEntity> findByStudentId(UUID studentId, Pageable pageable);
 
     /**
      * True when the student already has an ACTIVE training overlapping
