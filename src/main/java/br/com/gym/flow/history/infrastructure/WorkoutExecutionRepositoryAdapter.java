@@ -54,17 +54,29 @@ class WorkoutExecutionRepositoryAdapter implements WorkoutExecutionRepository {
         Page<WorkoutExecutionJpaEntity> page = executions.search(
             filter.studentId(), filter.trainingId(), filter.exerciseId(),
             filter.startedFrom(), filter.startedTo(), pageable);
-        if (page.isEmpty()) {
-            return page.map(entity -> WorkoutExecutionJpaMapper.toDomain(entity, List.of()));
-        }
-
-        // Batch-load the items for the whole page, then group by execution (no N+1).
-        List<UUID> ids = page.map(entity -> entity.id).getContent();
         Map<UUID, List<WorkoutExecutionItemJpaEntity>> itemsByExecution =
-            items.findByExecutionIdInOrderByExecutionIdAscPositionAsc(ids).stream()
-                .collect(Collectors.groupingBy(item -> item.executionId));
-
+            itemsFor(page.map(entity -> entity.id).getContent());
         return page.map(entity ->
             WorkoutExecutionJpaMapper.toDomain(entity, itemsByExecution.getOrDefault(entity.id, List.of())));
+    }
+
+    @Override
+    public List<WorkoutExecution> findByStudentInWindow(final UUID studentId, final Instant from, final Instant to) {
+        List<WorkoutExecutionJpaEntity> rows =
+            executions.findByStudentIdAndStartedAtBetweenOrderByStartedAtAsc(studentId, from, to);
+        Map<UUID, List<WorkoutExecutionItemJpaEntity>> itemsByExecution =
+            itemsFor(rows.stream().map(entity -> entity.id).toList());
+        return rows.stream()
+            .map(entity -> WorkoutExecutionJpaMapper.toDomain(entity, itemsByExecution.getOrDefault(entity.id, List.of())))
+            .toList();
+    }
+
+    /** Batch-loads the items for several executions, grouped by execution id (no N+1). */
+    private Map<UUID, List<WorkoutExecutionItemJpaEntity>> itemsFor(final List<UUID> executionIds) {
+        if (executionIds.isEmpty()) {
+            return Map.of();
+        }
+        return items.findByExecutionIdInOrderByExecutionIdAscPositionAsc(executionIds).stream()
+            .collect(Collectors.groupingBy(item -> item.executionId));
     }
 }

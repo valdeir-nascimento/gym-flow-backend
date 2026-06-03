@@ -7,11 +7,16 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 interface WorkoutExecutionJpaSpringRepository extends JpaRepository<WorkoutExecutionJpaEntity, UUID> {
 
     boolean existsByStudentIdAndTrainingIdAndStartedAt(UUID studentId, UUID trainingId, Instant startedAt);
+
+    /** A student's executions in a started-at window, oldest first (RF-008). */
+    List<WorkoutExecutionJpaEntity> findByStudentIdAndStartedAtBetweenOrderByStartedAtAsc(
+        UUID studentId, Instant from, Instant to);
 
     /**
      * History search (RF-009): always scoped to the student; the remaining filters

@@ -52,6 +52,10 @@ public enum ErrorCode {
     EXECUTION_TRAINING_INACTIVE_OUT_OF_WINDOW(ErrorCategory.BUSINESS_RULE, "treino inativado fora da janela de tolerância"),
     EXECUTION_ALREADY_REGISTERED(ErrorCategory.CONFLICT, "execução já registrada"),
 
+    // Evolution / progress (RF-008)
+    EVOLUTION_NOT_OWNED(ErrorCategory.FORBIDDEN, "evolução pertence a outro aluno"),
+    EVOLUTION_PERIOD_TOO_LONG(ErrorCategory.BUSINESS_RULE, "período máximo de consulta é de 24 meses"),
+
     // Authentication (RF-003)
     INVALID_CREDENTIALS(ErrorCategory.UNAUTHORIZED, "credenciais inválidas"),
     ACCOUNT_LOCKED(ErrorCategory.UNAUTHORIZED, "conta temporariamente bloqueada"),

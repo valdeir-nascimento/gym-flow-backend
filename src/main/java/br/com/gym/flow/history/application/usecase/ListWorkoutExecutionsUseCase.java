@@ -24,14 +24,18 @@ public class ListWorkoutExecutionsUseCase
     @Override
     @Transactional(readOnly = true)
     public Result<Page<WorkoutExecutionView>> execute(final ListWorkoutExecutionsQuery query) {
-        // Ownership (RNF-001): a student only sees their own history; an
-        // Administrator may inspect anyone.
         if (!ADMINISTRATOR.equals(query.actorRole()) && !query.actorId().equals(query.studentId())) {
             return Result.failWith(ErrorCode.EXECUTION_NOT_OWNED);
         }
 
         WorkoutExecutionFilter filter = new WorkoutExecutionFilter(
-            query.studentId(), query.trainingId(), query.exerciseId(), query.startedFrom(), query.startedTo());
+            query.studentId(),
+            query.trainingId(),
+            query.exerciseId(),
+            query.startedFrom(),
+            query.startedTo()
+        );
+
         Page<WorkoutExecutionView> page = repository.search(filter, query.pageable())
             .map(WorkoutExecutionViewMapper::toView);
         return Result.success(page);
