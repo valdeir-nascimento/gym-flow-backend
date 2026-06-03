@@ -42,6 +42,14 @@ public enum ErrorCode {
     TRAINING_INACTIVE_EXERCISE(ErrorCategory.BUSINESS_RULE, "exercício inativo não pode compor o treino"),
     TRAINING_OVERLAPPING_PERIOD(ErrorCategory.BUSINESS_RULE, "já existe treino ativo com vigência sobreposta"),
 
+    // Workout execution / history (RF-007)
+    EXECUTION_TRAINING_NOT_FOUND(ErrorCategory.NOT_FOUND, "treino da execução não encontrado"),
+    EXECUTION_TRAINING_NOT_OWNED(ErrorCategory.FORBIDDEN, "treino não pertence ao aluno"),
+    EXECUTION_FUTURE_DATETIME(ErrorCategory.VALIDATION, "data/hora da execução não pode ser futura"),
+    EXECUTION_END_BEFORE_START(ErrorCategory.BUSINESS_RULE, "fim da execução anterior ao início"),
+    EXECUTION_TRAINING_INACTIVE_OUT_OF_WINDOW(ErrorCategory.BUSINESS_RULE, "treino inativado fora da janela de tolerância"),
+    EXECUTION_ALREADY_REGISTERED(ErrorCategory.CONFLICT, "execução já registrada"),
+
     // Authentication (RF-003)
     INVALID_CREDENTIALS(ErrorCategory.UNAUTHORIZED, "credenciais inválidas"),
     ACCOUNT_LOCKED(ErrorCategory.UNAUTHORIZED, "conta temporariamente bloqueada"),
