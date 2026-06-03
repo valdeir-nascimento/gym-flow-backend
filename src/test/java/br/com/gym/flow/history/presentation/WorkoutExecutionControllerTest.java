@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
@@ -166,6 +167,23 @@ class WorkoutExecutionControllerTest {
     void givenDuplicateExecution_whenRegistering_thenReturns409() throws Exception {
         // Given — CONFLICT category -> 409 (idempotency)
         when(registerExecution.execute(any())).thenReturn(Result.failWith(ErrorCode.EXECUTION_ALREADY_REGISTERED));
+
+        // When / Then
+        mockMvc.perform(post("/trainings/{trainingId}/executions", TRAINING_ID)
+                .header("X-User-Id", STUDENT_ID)
+                .header("X-User-Role", "STUDENT")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json(request(List.of(validItem())))))
+            .andExpect(status().isConflict());
+    }
+
+    @Test
+    void givenConcurrentDuplicate_whenUniqueConstraintRejectsInsert_thenReturns409() throws Exception {
+        // Given — the idempotency exists-check passed, but the DB UNIQUE rejected
+        // the insert at flush (the check-then-insert race). The global handler must
+        // translate the integrity violation to 409, not 500.
+        when(registerExecution.execute(any()))
+            .thenThrow(new DataIntegrityViolationException("uq_workout_executions_key"));
 
         // When / Then
         mockMvc.perform(post("/trainings/{trainingId}/executions", TRAINING_ID)
