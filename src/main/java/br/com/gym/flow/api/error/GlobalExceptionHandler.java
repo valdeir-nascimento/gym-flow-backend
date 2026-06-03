@@ -6,6 +6,7 @@ import br.com.gym.flow.shared.domain.ErrorCode;
 import br.com.gym.flow.shared.domain.NotificationError;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -60,6 +61,18 @@ public class GlobalExceptionHandler {
         ProblemDetail pd = ProblemDetails.fromNotification(ex.notification());
         pd.setStatus(409);
         return ResponseEntity.status(409).body(pd);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ProblemDetail> handleDataIntegrity(DataIntegrityViolationException ex) {
+        // A unique/foreign-key constraint rejected the write. This is the
+        // last-line guard for check-then-insert races (e.g. RF-007 idempotency):
+        // the application's exists-checks handle the common case, the DB the rest.
+        log.info("data integrity violation: {}", ex.getMostSpecificCause().getMessage());
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.CONFLICT);
+        pd.setTitle("Conflito de dados");
+        pd.setDetail("O registro conflita com um já existente.");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(pd);
     }
 
     @ExceptionHandler(OptimisticLockingFailureException.class)
