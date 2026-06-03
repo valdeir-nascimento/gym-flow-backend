@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,4 +23,11 @@ public interface WorkoutExecutionRepository {
 
     /** A student's activity history matching {@code filter}, paginated (RF-009). */
     Page<WorkoutExecution> search(WorkoutExecutionFilter filter, Pageable pageable);
+
+    /**
+     * All of a student's executions whose start falls in [{@code from}, {@code to}],
+     * oldest first (RF-008: feeds the evolution indicators). Not paginated — the
+     * window is bounded by the caller (≤ 24 months).
+     */
+    List<WorkoutExecution> findByStudentInWindow(UUID studentId, Instant from, Instant to);
 }
