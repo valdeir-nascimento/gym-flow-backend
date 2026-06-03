@@ -27,6 +27,11 @@ public enum ErrorCode {
     BOND_INACTIVE_PARTICIPANT(ErrorCategory.BUSINESS_RULE, "participante do vínculo inativo"),
     BOND_NOT_OWNED_BY_INSTRUCTOR(ErrorCategory.FORBIDDEN, "vínculo não pertence ao professor"),
 
+    // Exercise catalog (RF-011)
+    EXERCISE_NOT_FOUND(ErrorCategory.NOT_FOUND, "exercício não encontrado"),
+    EXERCISE_NAME_TAKEN(ErrorCategory.CONFLICT, "nome de exercício já cadastrado"),
+    EXERCISE_ALREADY_INACTIVE(ErrorCategory.BUSINESS_RULE, "exercício já inativado"),
+
     // Authentication (RF-003)
     INVALID_CREDENTIALS(ErrorCategory.UNAUTHORIZED, "credenciais inválidas"),
     ACCOUNT_LOCKED(ErrorCategory.UNAUTHORIZED, "conta temporariamente bloqueada"),
