@@ -9,9 +9,10 @@ import br.com.gym.flow.shared.observability.MdcRequestFilter;
 import br.com.gym.flow.trainings.application.usecase.CreateTrainingCommand;
 import br.com.gym.flow.trainings.application.usecase.CreateTrainingUseCase;
 import br.com.gym.flow.trainings.application.usecase.GetTrainingUseCase;
+import br.com.gym.flow.trainings.application.usecase.ListStudentTrainingsQuery;
+import br.com.gym.flow.trainings.application.usecase.ListStudentTrainingsUseCase;
 import br.com.gym.flow.trainings.application.usecase.UpdateTrainingCommand;
 import br.com.gym.flow.trainings.application.usecase.UpdateTrainingUseCase;
-import br.com.gym.flow.trainings.domain.TrainingStatus;
 import br.com.gym.flow.trainings.domain.spi.TrainingItemView;
 import br.com.gym.flow.trainings.domain.spi.TrainingView;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,6 +20,9 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
@@ -68,6 +72,8 @@ class TrainingControllerTest {
     private CreateTrainingUseCase createTraining;
     @MockitoBean
     private UpdateTrainingUseCase updateTraining;
+    @MockitoBean
+    private ListStudentTrainingsUseCase listStudentTrainings;
     @MockitoBean
     private GetTrainingUseCase getTraining;
 
@@ -266,6 +272,64 @@ class TrainingControllerTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(json(updateRequest())))
                 .andExpect(status().isConflict());
+        }
+    }
+
+    @Nested
+    class ListByStudent {
+
+        @Test
+        void givenStudentRequestingOwnTrainings_whenListing_thenReturns200PagedAndMapsQuery() throws Exception {
+            // Given
+            Page<TrainingView> page = new PageImpl<>(List.of(view()), PageRequest.of(0, 20), 1);
+            when(listStudentTrainings.execute(any())).thenReturn(Result.success(page));
+
+            // When / Then — paged body with status on each item
+            mockMvc.perform(get("/trainings")
+                    .param("studentId", STUDENT_ID.toString())
+                    .header("X-User-Id", STUDENT_ID)
+                    .header("X-User-Role", "STUDENT"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(TRAINING_ID.toString()))
+                .andExpect(jsonPath("$.content[0].status").value("ACTIVE"));
+
+            // Then — studentId param + headers mapped into the query
+            var captor = ArgumentCaptor.forClass(ListStudentTrainingsQuery.class);
+            verify(listStudentTrainings).execute(captor.capture());
+            assertThat(captor.getValue().studentId()).isEqualTo(STUDENT_ID);
+            assertThat(captor.getValue().actorId()).isEqualTo(STUDENT_ID);
+            assertThat(captor.getValue().actorRole()).isEqualTo("STUDENT");
+            verifyNoMoreInteractions(listStudentTrainings);
+        }
+
+        @Test
+        void givenStudentWithoutTrainings_whenListing_thenReturns200EmptyPage() throws Exception {
+            // Given
+            when(listStudentTrainings.execute(any())).thenReturn(Result.success(Page.empty()));
+
+            // When / Then
+            mockMvc.perform(get("/trainings")
+                    .param("studentId", STUDENT_ID.toString())
+                    .header("X-User-Id", STUDENT_ID)
+                    .header("X-User-Role", "STUDENT"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(0))
+                .andExpect(jsonPath("$.content").isEmpty());
+        }
+
+        @Test
+        void givenStudentRequestingAnotherStudentsTrainings_whenListing_thenReturns403() throws Exception {
+            // Given
+            when(listStudentTrainings.execute(any()))
+                .thenReturn(Result.failWith(ErrorCode.TRAINING_NOT_STUDENT_OWNER));
+
+            // When / Then
+            mockMvc.perform(get("/trainings")
+                    .param("studentId", UUID.randomUUID().toString())
+                    .header("X-User-Id", STUDENT_ID)
+                    .header("X-User-Role", "STUDENT"))
+                .andExpect(status().isForbidden());
         }
     }
 

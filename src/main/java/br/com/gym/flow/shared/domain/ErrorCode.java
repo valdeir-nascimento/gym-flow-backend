@@ -36,6 +36,7 @@ public enum ErrorCode {
     TRAINING_NOT_FOUND(ErrorCategory.NOT_FOUND, "treino não encontrado"),
     TRAINING_INSTRUCTOR_NOT_LINKED(ErrorCategory.FORBIDDEN, "professor não vinculado ao aluno"),
     TRAINING_NOT_OWNED(ErrorCategory.FORBIDDEN, "treino não pertence ao professor"),
+    TRAINING_NOT_STUDENT_OWNER(ErrorCategory.FORBIDDEN, "treinos pertencem a outro aluno"),
     TRAINING_ARCHIVED(ErrorCategory.CONFLICT, "treino arquivado não pode ser editado"),
     TRAINING_STUDENT_INACTIVE(ErrorCategory.BUSINESS_RULE, "aluno inativo não pode receber treino"),
     TRAINING_INACTIVE_EXERCISE(ErrorCategory.BUSINESS_RULE, "exercício inativo não pode compor o treino"),

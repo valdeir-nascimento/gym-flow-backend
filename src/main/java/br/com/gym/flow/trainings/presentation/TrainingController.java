@@ -5,6 +5,8 @@ import br.com.gym.flow.trainings.application.usecase.CreateTrainingCommand;
 import br.com.gym.flow.trainings.application.usecase.CreateTrainingUseCase;
 import br.com.gym.flow.trainings.application.usecase.GetTrainingQuery;
 import br.com.gym.flow.trainings.application.usecase.GetTrainingUseCase;
+import br.com.gym.flow.trainings.application.usecase.ListStudentTrainingsQuery;
+import br.com.gym.flow.trainings.application.usecase.ListStudentTrainingsUseCase;
 import br.com.gym.flow.trainings.application.usecase.UpdateTrainingCommand;
 import br.com.gym.flow.trainings.application.usecase.UpdateTrainingUseCase;
 import br.com.gym.flow.trainings.domain.TrainingId;
@@ -13,6 +15,8 @@ import br.com.gym.flow.trainings.domain.spi.TrainingView;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +26,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,6 +40,7 @@ class TrainingController {
 
     private final CreateTrainingUseCase createTraining;
     private final UpdateTrainingUseCase updateTraining;
+    private final ListStudentTrainingsUseCase listStudentTrainings;
     private final GetTrainingUseCase getTraining;
 
     @PostMapping
@@ -65,6 +71,15 @@ class TrainingController {
         return updateTraining.execute(new UpdateTrainingCommand(
             TrainingId.of(id), req.name(), req.objective(), req.startDate(), req.endDate(),
             items, req.status(), actorId, actorRole));
+    }
+
+    @GetMapping
+    Result<Page<TrainingView>> listByStudent(@RequestParam UUID studentId,
+                                             @RequestHeader("X-User-Id") UUID actorId,
+                                             @RequestHeader("X-User-Role") String actorRole,
+                                             Pageable pageable) {
+        return listStudentTrainings.execute(
+            new ListStudentTrainingsQuery(studentId, actorId, actorRole, pageable));
     }
 
     @GetMapping("/{id}")
