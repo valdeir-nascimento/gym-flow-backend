@@ -42,7 +42,9 @@ public enum ErrorCode {
     TRAINING_INACTIVE_EXERCISE(ErrorCategory.BUSINESS_RULE, "exercício inativo não pode compor o treino"),
     TRAINING_OVERLAPPING_PERIOD(ErrorCategory.BUSINESS_RULE, "já existe treino ativo com vigência sobreposta"),
 
-    // Workout execution / history (RF-007)
+    // Workout execution / history (RF-007, RF-009)
+    EXECUTION_NOT_FOUND(ErrorCategory.NOT_FOUND, "execução não encontrada"),
+    EXECUTION_NOT_OWNED(ErrorCategory.FORBIDDEN, "histórico pertence a outro aluno"),
     EXECUTION_TRAINING_NOT_FOUND(ErrorCategory.NOT_FOUND, "treino da execução não encontrado"),
     EXECUTION_TRAINING_NOT_OWNED(ErrorCategory.FORBIDDEN, "treino não pertence ao aluno"),
     EXECUTION_FUTURE_DATETIME(ErrorCategory.VALIDATION, "data/hora da execução não pode ser futura"),

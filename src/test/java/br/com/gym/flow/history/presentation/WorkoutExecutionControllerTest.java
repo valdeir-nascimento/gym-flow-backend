@@ -90,8 +90,7 @@ class WorkoutExecutionControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json(request(List.of(validItem())))))
             .andExpect(status().isCreated())
-            .andExpect(header().string("Location",
-                "/trainings/" + TRAINING_ID + "/executions/" + EXECUTION_ID))
+            .andExpect(header().string("Location", "/workout-executions/" + EXECUTION_ID))
             .andExpect(jsonPath("$.id").value(EXECUTION_ID.toString()))
             .andExpect(jsonPath("$.trainingId").value(TRAINING_ID.toString()))
             .andExpect(jsonPath("$.items[0].exerciseId").value(EXERCISE_ID.toString()));

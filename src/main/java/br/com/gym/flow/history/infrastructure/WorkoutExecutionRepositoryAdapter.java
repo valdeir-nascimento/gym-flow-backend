@@ -1,13 +1,20 @@
 package br.com.gym.flow.history.infrastructure;
 
 import br.com.gym.flow.history.domain.WorkoutExecution;
+import br.com.gym.flow.history.domain.WorkoutExecutionFilter;
+import br.com.gym.flow.history.domain.WorkoutExecutionId;
 import br.com.gym.flow.history.domain.WorkoutExecutionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -33,5 +40,31 @@ class WorkoutExecutionRepositoryAdapter implements WorkoutExecutionRepository {
         final Instant startedAt
     ) {
         return executions.existsByStudentIdAndTrainingIdAndStartedAt(studentId, trainingId, startedAt);
+    }
+
+    @Override
+    public Optional<WorkoutExecution> findById(final WorkoutExecutionId id) {
+        return executions.findById(id.value())
+            .map(entity -> WorkoutExecutionJpaMapper.toDomain(
+                entity, items.findByExecutionIdOrderByPosition(id.value())));
+    }
+
+    @Override
+    public Page<WorkoutExecution> search(final WorkoutExecutionFilter filter, final Pageable pageable) {
+        Page<WorkoutExecutionJpaEntity> page = executions.search(
+            filter.studentId(), filter.trainingId(), filter.exerciseId(),
+            filter.startedFrom(), filter.startedTo(), pageable);
+        if (page.isEmpty()) {
+            return page.map(entity -> WorkoutExecutionJpaMapper.toDomain(entity, List.of()));
+        }
+
+        // Batch-load the items for the whole page, then group by execution (no N+1).
+        List<UUID> ids = page.map(entity -> entity.id).getContent();
+        Map<UUID, List<WorkoutExecutionItemJpaEntity>> itemsByExecution =
+            items.findByExecutionIdInOrderByExecutionIdAscPositionAsc(ids).stream()
+                .collect(Collectors.groupingBy(item -> item.executionId));
+
+        return page.map(entity ->
+            WorkoutExecutionJpaMapper.toDomain(entity, itemsByExecution.getOrDefault(entity.id, List.of())));
     }
 }
