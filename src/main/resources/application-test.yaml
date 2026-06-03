@@ -1,0 +1,38 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  mail:
+    host: localhost
+    port: 1025
+
+rate-limit:
+  enabled: false
+
+app:
+  jwt:
+    secret: test-secret-test-secret-test-secret-32
+    access-ttl: PT15M
+    refresh-ttl: P7D
+    issuer: ws-fitness-test
+  invite:
+    ttl: PT72H
+  password-recovery:
+    ttl: PT1H
+  login-throttle:
+    max-attempts: 5
+    window: PT15M
+    block-duration: PT15M
+  security:
+    cors:
+      allowed-origins: http://localhost
+  mail:
+    from: noreply@wsfitness.test
+    sender-name: WS Fitness Test
+    base-url: http://localhost:8080
+
+logging:
+  level:
+    org.springframework.modulith: INFO

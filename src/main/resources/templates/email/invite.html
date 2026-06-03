@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Bem-vindo ao WS Fitness</title>
+</head>
+<body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+    <h2>Olá, <span th:text="${name}">aluno</span>!</h2>
+    <p>Sua conta no <strong>WS Fitness</strong> foi criada como <span th:text="${role}">ALUNO</span>.</p>
+    <p>Para definir sua senha e ativar o acesso, clique no link abaixo (válido por 72 horas):</p>
+    <p>
+        <a th:href="${inviteUrl}" th:text="${inviteUrl}" style="display: inline-block; padding: 10px 16px; background: #2563eb; color: #fff; text-decoration: none; border-radius: 4px;">
+            Definir minha senha
+        </a>
+    </p>
+    <p style="color: #666; font-size: 12px;">
+        Se você não solicitou este cadastro, ignore esta mensagem.
+    </p>
+    <p>— Equipe WS Fitness</p>
+</body>
+</html>
