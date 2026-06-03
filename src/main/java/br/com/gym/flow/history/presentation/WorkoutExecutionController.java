@@ -42,8 +42,8 @@ class WorkoutExecutionController {
         Result<WorkoutExecutionView> result = registerExecution.execute(new RegisterWorkoutExecutionCommand(
             trainingId, actorId, req.startedAt(), req.finishedAt(), req.notes(), items));
         if (result.isSuccess()) {
-            response.setHeader(HttpHeaders.LOCATION,
-                "/trainings/" + trainingId + "/executions/" + result.getOrThrow().id());
+            // Canonical location of the created resource (its read endpoint, RF-009).
+            response.setHeader(HttpHeaders.LOCATION, "/workout-executions/" + result.getOrThrow().id());
         }
         return result;
     }

@@ -15,6 +15,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.List;
@@ -140,6 +141,16 @@ public class GlobalExceptionHandler {
     private static String lastSegment(String path) {
         int dot = path.lastIndexOf('.');
         return dot < 0 ? path : path.substring(dot + 1);
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ProblemDetail> handleHandlerMethodValidation(HandlerMethodValidationException ex) {
+        // Constraints on @RequestParam/@PathVariable (e.g. RF-009: size in [1, 100]).
+        log.info("request parameter validation failed: {}", ex.getReason());
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        pd.setTitle("Parâmetros inválidos");
+        pd.setDetail("Um ou mais parâmetros da requisição são inválidos (ex.: 'size' deve estar entre 1 e 100).");
+        return ResponseEntity.badRequest().body(pd);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
