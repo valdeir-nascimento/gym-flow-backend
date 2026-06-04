@@ -12,6 +12,7 @@ import br.com.gym.flow.users.events.UserRegistered;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -30,7 +31,10 @@ class UserRegisteredListener {
     private final MailProperties mailProps;
     private final Clock clock;
 
-    @Transactional
+    // Runs after the user-registration transaction commits; its own writes
+    // (credentials + invite) need a fresh transaction — REQUIRES_NEW is mandatory
+    // for a @Transactional @TransactionalEventListener (Spring rejects others).
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @TransactionalEventListener
     public void on(UserRegistered event) {
         UserCredentials pending = UserCredentials.pending(event.userId(), event.email(), event.role());
