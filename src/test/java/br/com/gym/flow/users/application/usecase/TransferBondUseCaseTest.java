@@ -105,6 +105,21 @@ class TransferBondUseCaseTest {
     }
 
     @Test
+    void givenInactiveStudent_whenTransferring_thenFailsInactiveParticipant() {
+        // Given — the student being transferred is inactive
+        User inactiveStudent = aUser().withId(STUDENT_ID).withRole(Role.STUDENT).withStatus(UserStatus.INACTIVE).build();
+        when(users.findById(STUDENT_ID)).thenReturn(Optional.of(inactiveStudent));
+        when(users.findById(NEW_INSTRUCTOR_ID)).thenReturn(Optional.of(activeNewInstructor()));
+
+        // When
+        var result = useCase.execute(command());
+
+        // Then — 422, nothing persisted
+        assertThat(failureOf(result).hasAnyCode(ErrorCode.BOND_INACTIVE_PARTICIPANT)).isTrue();
+        verify(bonds, never()).save(any());
+    }
+
+    @Test
     void givenExistingActiveBond_whenTransferring_thenClosesOldOpensNewAndPublishesBoth() {
         // Given — a previously-persisted active bond, as loaded from the repo: hydrated, no pending events
         when(users.findById(STUDENT_ID)).thenReturn(Optional.of(activeStudent()));

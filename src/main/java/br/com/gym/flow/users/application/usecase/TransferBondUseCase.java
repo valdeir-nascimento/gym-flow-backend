@@ -37,6 +37,10 @@ public class TransferBondUseCase implements CommandUseCase<TransferBondCommand, 
         if (maybeStudent.isEmpty() || maybeNew.isEmpty()) {
             return Result.failWith(ErrorCode.USER_NOT_FOUND);
         }
+        // Both participants must be active (RF-016: inactive participant -> 422).
+        if (maybeStudent.get().status() == UserStatus.INACTIVE) {
+            return Result.failWith(ErrorCode.BOND_INACTIVE_PARTICIPANT);
+        }
         if (maybeNew.get().role() != Role.INSTRUCTOR || maybeNew.get().status() == UserStatus.INACTIVE) {
             return Result.failWith(ErrorCode.BOND_INACTIVE_PARTICIPANT);
         }
