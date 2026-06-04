@@ -67,11 +67,12 @@ public enum ErrorCode {
     // Tokens (RF-003, RF-013, RF-014)
     INVALID_REFRESH_TOKEN(ErrorCategory.UNAUTHORIZED, "refresh token inválido"),
     REFRESH_TOKEN_EXPIRED(ErrorCategory.UNAUTHORIZED, "refresh token expirado"),
-    INVALID_INVITE_TOKEN(ErrorCategory.UNAUTHORIZED, "convite inválido"),
-    INVITE_TOKEN_EXPIRED(ErrorCategory.UNAUTHORIZED, "convite expirado"),
-    INVITE_TOKEN_CONSUMED(ErrorCategory.UNAUTHORIZED, "convite já utilizado"),
-    INVALID_PASSWORD_RESET_TOKEN(ErrorCategory.UNAUTHORIZED, "token de redefinição inválido"),
-    PASSWORD_RESET_TOKEN_EXPIRED(ErrorCategory.UNAUTHORIZED, "token de redefinição expirado"),
+    // Single-use tokens: invalid/expired/consumed -> 410 Gone (RF-013, RF-014).
+    INVALID_INVITE_TOKEN(ErrorCategory.GONE, "convite inválido"),
+    INVITE_TOKEN_EXPIRED(ErrorCategory.GONE, "convite expirado"),
+    INVITE_TOKEN_CONSUMED(ErrorCategory.GONE, "convite já utilizado"),
+    INVALID_PASSWORD_RESET_TOKEN(ErrorCategory.GONE, "token de redefinição inválido"),
+    PASSWORD_RESET_TOKEN_EXPIRED(ErrorCategory.GONE, "token de redefinição expirado"),
 
     // Password policy (RF-013, RF-014, RF-015, RNF-001)
     WEAK_PASSWORD(ErrorCategory.BUSINESS_RULE, "senha fraca"),

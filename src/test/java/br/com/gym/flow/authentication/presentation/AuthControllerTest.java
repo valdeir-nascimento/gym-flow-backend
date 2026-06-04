@@ -227,16 +227,15 @@ class AuthControllerTest {
     class ConsumeInvite {
 
         @Test
-        void givenValidInvite_whenConsuming_thenReturns200AndMapsTokenFromPath() throws Exception {
-            // Given
-            when(consumeInvite.execute(any())).thenReturn(Result.success(tokenPair()));
+        void givenValidInvite_whenConsuming_thenReturns204AndMapsTokenFromPath() throws Exception {
+            // Given — RF-013: first access does not auto-login
+            when(consumeInvite.execute(any())).thenReturn(Result.ok());
 
             // When / Then
             mockMvc.perform(post("/auth/invites/{token}/consume", "invite-token-123")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(json(new ConsumeInviteRequest(PASSWORD, PASSWORD))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessToken").value("access-jwt"));
+                .andExpect(status().isNoContent());
 
             // Then — path token + body mapped into the command
             var captor = ArgumentCaptor.forClass(ConsumeInviteCommand.class);
@@ -248,15 +247,15 @@ class AuthControllerTest {
         }
 
         @Test
-        void givenExpiredInvite_whenConsuming_thenReturns401() throws Exception {
-            // Given
+        void givenExpiredInvite_whenConsuming_thenReturns410() throws Exception {
+            // Given — single-use token expired -> 410 Gone (RF-013)
             when(consumeInvite.execute(any())).thenReturn(Result.failWith(ErrorCode.INVITE_TOKEN_EXPIRED));
 
             // When / Then
             mockMvc.perform(post("/auth/invites/{token}/consume", "expired")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(json(new ConsumeInviteRequest(PASSWORD, PASSWORD))))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isGone());
         }
 
         @Test
@@ -337,15 +336,15 @@ class AuthControllerTest {
         }
 
         @Test
-        void givenInvalidToken_whenResetting_thenReturns401() throws Exception {
-            // Given
+        void givenInvalidToken_whenResetting_thenReturns410() throws Exception {
+            // Given — single-use reset token invalid -> 410 Gone (RF-014)
             when(resetPassword.execute(any())).thenReturn(Result.failWith(ErrorCode.INVALID_PASSWORD_RESET_TOKEN));
 
             // When / Then
             mockMvc.perform(post("/auth/password-reset/{token}", "bad")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(json(new ResetPasswordRequest(PASSWORD, PASSWORD))))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isGone());
         }
     }
 }

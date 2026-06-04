@@ -47,18 +47,29 @@ class AuthenticationOnboardingE2ETest {
 
     @Test
     void givenBootstrapInvite_whenOnboardingThenAuthenticating_thenTheWholeFlowWorks() {
-        // 1. Consume the bootstrap invite: defines the password, activates the admin, issues tokens
-        ResponseEntity<JsonNode> consumed = rest.postForEntity(
+        // 1. Consume the bootstrap invite: defines the password and activates the admin.
+        //    RF-013: no auto-login — 204 No Content, the user authenticates separately.
+        ResponseEntity<Void> consumed = rest.postForEntity(
             "/auth/invites/{token}/consume",
             jsonBody(Map.of("newPassword", NEW_PASSWORD, "passwordConfirmation", NEW_PASSWORD)),
-            JsonNode.class, BOOTSTRAP_INVITE);
+            Void.class, BOOTSTRAP_INVITE);
 
-        assertThat(consumed.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(consumed.getBody().get("role").asText()).isEqualTo("ADMINISTRATOR");
-        String accessToken = consumed.getBody().get("accessToken").asText();
+        assertThat(consumed.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        // 2. Login with the freshly defined password returns the token pair (RF-003)
+        ResponseEntity<JsonNode> login = rest.postForEntity(
+            "/auth/login",
+            jsonBody(Map.of("email", ADMIN_EMAIL, "password", NEW_PASSWORD)),
+            JsonNode.class);
+
+        assertThat(login.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(login.getBody().get("role").asText()).isEqualTo("ADMINISTRATOR");
+        String accessToken = login.getBody().get("accessToken").asText();
+        String refreshToken = login.getBody().get("refreshToken").asText();
         assertThat(accessToken).isNotBlank();
+        assertThat(refreshToken).isNotBlank();
 
-        // 2. The issued access token authenticates against a protected endpoint, and the admin
+        // 3. The access token authenticates against a protected endpoint, and the admin
         //    is now ACTIVE (activated as part of consuming the invite, across the users module)
         var authHeaders = new HttpHeaders();
         authHeaders.setBearerAuth(accessToken);
@@ -67,16 +78,6 @@ class AuthenticationOnboardingE2ETest {
         assertThat(admin.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(admin.getBody().get("email").asText()).isEqualTo(ADMIN_EMAIL);
         assertThat(admin.getBody().get("status").asText()).isEqualTo("ACTIVE");
-
-        // 3. Login with the freshly defined password returns a new token pair
-        ResponseEntity<JsonNode> login = rest.postForEntity(
-            "/auth/login",
-            jsonBody(Map.of("email", ADMIN_EMAIL, "password", NEW_PASSWORD)),
-            JsonNode.class);
-
-        assertThat(login.getStatusCode()).isEqualTo(HttpStatus.OK);
-        String refreshToken = login.getBody().get("refreshToken").asText();
-        assertThat(refreshToken).isNotBlank();
 
         // 4. The refresh token rotates into a fresh pair
         ResponseEntity<JsonNode> refreshed = rest.postForEntity(
