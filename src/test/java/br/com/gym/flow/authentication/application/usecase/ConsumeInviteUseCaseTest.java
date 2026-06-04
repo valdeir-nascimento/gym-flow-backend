@@ -2,7 +2,6 @@ package br.com.gym.flow.authentication.application.usecase;
 
 import br.com.gym.flow.authentication.application.service.InviteConsumer;
 import br.com.gym.flow.authentication.application.service.PasswordInitializer;
-import br.com.gym.flow.authentication.application.service.TokenIssuer;
 import br.com.gym.flow.authentication.application.service.UserActivator;
 import br.com.gym.flow.authentication.domain.UserCredentials;
 import br.com.gym.flow.authentication.domain.UserCredentialsStatus;
@@ -22,6 +21,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -38,14 +38,12 @@ class ConsumeInviteUseCaseTest {
     private PasswordInitializer passwordInitializer;
     @Mock
     private UserActivator userActivator;
-    @Mock
-    private TokenIssuer tokenIssuer;
 
     private ConsumeInviteUseCase useCase;
 
     @BeforeEach
     void setUp() {
-        useCase = new ConsumeInviteUseCase(inviteConsumer, passwordInitializer, userActivator, tokenIssuer);
+        useCase = new ConsumeInviteUseCase(inviteConsumer, passwordInitializer, userActivator);
     }
 
     private static Notification failureOf(Result<?> result) {
@@ -63,30 +61,24 @@ class ConsumeInviteUseCaseTest {
             Instant.parse("2026-06-01T12:00:00Z"), "STUDENT", UserCredentialsStatus.ACTIVE);
     }
 
-    private static TokenPairView tokenPair() {
-        return new TokenPairView("access", "refresh",
-            Instant.parse("2026-06-01T12:15:00Z"), Instant.parse("2026-06-08T12:00:00Z"), USER_ID, "STUDENT");
-    }
-
     private ConsumeInviteCommand command() {
         return new ConsumeInviteCommand(RAW_TOKEN, PASSWORD, PASSWORD, "203.0.113.7");
     }
 
     @Test
-    void givenValidInvite_whenConsuming_thenInitializesActivatesAndIssuesTokens() {
+    void givenValidInvite_whenConsuming_thenInitializesAndActivatesWithoutLoggingIn() {
         // Given — the whole chain succeeds
         UserCredentials cred = activatedCredentials();
         when(inviteConsumer.consume(RAW_TOKEN)).thenReturn(Result.success(invite()));
         when(passwordInitializer.initialize(USER_ID, PASSWORD, PASSWORD)).thenReturn(Result.success(cred));
         when(userActivator.activate(cred)).thenReturn(Result.success(cred));
-        when(tokenIssuer.issue(USER_ID, "STUDENT")).thenReturn(tokenPair());
 
         // When
         var result = useCase.execute(command());
 
-        // Then
+        // Then — success carries no tokens (RF-013: user authenticates separately)
         assertThat(result.isSuccess()).isTrue();
-        assertThat(result.getOrThrow().userId()).isEqualTo(USER_ID);
+        verify(userActivator).activate(cred);
     }
 
     @Test
@@ -99,11 +91,11 @@ class ConsumeInviteUseCaseTest {
 
         // Then — nothing downstream runs
         assertThat(failureOf(result).hasAnyCode(ErrorCode.INVITE_TOKEN_EXPIRED)).isTrue();
-        verifyNoInteractions(passwordInitializer, userActivator, tokenIssuer);
+        verifyNoInteractions(passwordInitializer, userActivator);
     }
 
     @Test
-    void givenPasswordMismatch_whenConsuming_thenStopsBeforeActivationAndTokenIssuance() {
+    void givenPasswordMismatch_whenConsuming_thenStopsBeforeActivation() {
         // Given — invite is fine, but the password initialization fails
         when(inviteConsumer.consume(RAW_TOKEN)).thenReturn(Result.success(invite()));
         when(passwordInitializer.initialize(any(), any(), any()))
@@ -114,6 +106,6 @@ class ConsumeInviteUseCaseTest {
 
         // Then
         assertThat(failureOf(result).hasAnyCode(ErrorCode.PASSWORD_MISMATCH)).isTrue();
-        verifyNoInteractions(userActivator, tokenIssuer);
+        verifyNoInteractions(userActivator);
     }
 }

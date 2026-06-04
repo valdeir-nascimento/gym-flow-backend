@@ -19,6 +19,7 @@ final class ErrorCategoryHttpStatus {
             case FORBIDDEN -> HttpStatus.FORBIDDEN;
             case NOT_FOUND -> HttpStatus.NOT_FOUND;
             case CONFLICT -> HttpStatus.CONFLICT;
+            case GONE -> HttpStatus.GONE;
             case BUSINESS_RULE -> HttpStatus.UNPROCESSABLE_ENTITY;
             case INFRASTRUCTURE -> HttpStatus.SERVICE_UNAVAILABLE;
         };

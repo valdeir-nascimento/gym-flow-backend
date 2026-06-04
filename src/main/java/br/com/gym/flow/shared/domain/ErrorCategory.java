@@ -11,6 +11,7 @@ public enum ErrorCategory {
     FORBIDDEN,        // 403 — authenticated but not allowed
     NOT_FOUND,        // 404
     CONFLICT,         // 409 — uniqueness, duplicate state
+    GONE,             // 410 — single-use token already consumed / expired / invalid
     BUSINESS_RULE,    // 422 — semantic invariant violated
     INFRASTRUCTURE    // 503 — downstream failure
 }

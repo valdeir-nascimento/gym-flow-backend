@@ -7,25 +7,28 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import br.com.gym.flow.authentication.application.service.InviteConsumer;
 import br.com.gym.flow.authentication.application.service.PasswordInitializer;
-import br.com.gym.flow.authentication.application.service.TokenIssuer;
 import br.com.gym.flow.authentication.application.service.UserActivator;
 
 
+/**
+ * First-access flow (RF-013): consume the single-use invite, set the password
+ * and activate the user. Per the spec this does NOT log the user in — it
+ * returns 204 and the user authenticates separately (RF-003).
+ */
 @Service
 @RequiredArgsConstructor
-public class ConsumeInviteUseCase implements CommandUseCase<ConsumeInviteCommand, TokenPairView> {
+public class ConsumeInviteUseCase implements CommandUseCase<ConsumeInviteCommand, Void> {
 
     private final InviteConsumer inviteConsumer;
     private final PasswordInitializer passwordInitializer;
     private final UserActivator userActivator;
-    private final TokenIssuer tokenIssuer;
 
     @Override
     @Transactional
-    public Result<TokenPairView> execute(ConsumeInviteCommand command) {
+    public Result<Void> execute(ConsumeInviteCommand command) {
         return inviteConsumer.consume(command.rawToken())
             .flatMap(invite -> passwordInitializer.initialize(invite.userId(), command.newPassword(), command.passwordConfirmation()))
             .flatMap(userActivator::activate)
-            .map(cred -> tokenIssuer.issue(cred.userId(), cred.role()));
+            .flatMap(credentials -> Result.ok());
     }
 }

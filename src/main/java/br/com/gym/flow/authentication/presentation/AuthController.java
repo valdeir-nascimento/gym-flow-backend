@@ -56,9 +56,10 @@ class AuthController {
     }
 
     @PostMapping("/invites/{token}/consume")
-    Result<TokenPairView> consumeInvite(@PathVariable String token,
-                                        @Valid @RequestBody ConsumeInviteRequest req,
-                                        HttpServletRequest http) {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    Result<Void> consumeInvite(@PathVariable String token,
+                               @Valid @RequestBody ConsumeInviteRequest req,
+                               HttpServletRequest http) {
         return consumeInvite.execute(new ConsumeInviteCommand(
             token, req.newPassword(), req.passwordConfirmation(), ClientIp.resolve(http)));
     }
