@@ -1,0 +1,25 @@
+meta {
+  name: Get Managed Student - not bonded (403)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/instructor/students/{{studentId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: 88888888-8888-8888-8888-888888888888
+  X-User-Role: INSTRUCTOR
+}
+
+assert {
+  res.status: eq 403
+}
+
+docs {
+  RF-010 — an instructor not bonded to the student -> 403 STUDENT_NOT_MANAGED.
+}

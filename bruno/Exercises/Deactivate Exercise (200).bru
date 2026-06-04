@@ -1,0 +1,28 @@
+meta {
+  name: Deactivate Exercise (200)
+  type: http
+  seq: 7
+}
+
+patch {
+  url: {{baseUrl}}/exercises/{{exerciseId}}/deactivate
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  X-User-Role: ADMINISTRATOR
+}
+
+assert {
+  res.status: eq 200
+  res.body.status: eq INACTIVE
+}
+
+docs {
+  RF-011 — soft-deactivates the exercise (it can no longer compose new trainings:
+  RF-004 rejects inactive exercises with 422). Run the Trainings folder first —
+  it registers its own active exercise, so it is unaffected by this. Re-running
+  returns 422 (EXERCISE_ALREADY_INACTIVE).
+}

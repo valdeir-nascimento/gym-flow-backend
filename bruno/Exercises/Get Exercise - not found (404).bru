@@ -1,0 +1,19 @@
+meta {
+  name: Get Exercise - not found (404)
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/exercises/00000000-0000-0000-0000-0000000000ee
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+assert {
+  res.status: eq 404
+}

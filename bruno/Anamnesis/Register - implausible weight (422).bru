@@ -1,0 +1,36 @@
+meta {
+  name: Register - implausible weight (422)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/users/{{studentId}}/anamnesis
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: {{adminId}}
+  X-User-Role: ADMINISTRATOR
+}
+
+body:json {
+  {
+    "weightKg": 5,
+    "heightCm": 178,
+    "objectives": "Hipertrofia",
+    "contraindications": []
+  }
+}
+
+assert {
+  res.status: eq 422
+}
+
+docs {
+  RF-017 — anthropometric value outside the plausible range -> 422
+  (ANAMNESIS_IMPLAUSIBLE_WEIGHT). Requires the consented student.
+}

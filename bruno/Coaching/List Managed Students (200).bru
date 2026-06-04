@@ -1,0 +1,33 @@
+meta {
+  name: List Managed Students (200)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/instructor/students?page=0&size=20
+  body: none
+  auth: none
+}
+
+params:query {
+  page: 0
+  size: 20
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: {{instructorId}}
+  X-User-Role: INSTRUCTOR
+}
+
+assert {
+  res.status: eq 200
+  res.body.totalElements: isNumber
+}
+
+docs {
+  RF-010 — the professor's students with activity indicators, ordered by last
+  execution. Empty when the instructor has no active bonds (still 200). An
+  ADMINISTRATOR sees all students.
+}

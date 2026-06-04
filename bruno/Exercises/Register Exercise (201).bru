@@ -1,0 +1,46 @@
+meta {
+  name: Register Exercise (201)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/exercises
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: {{adminId}}
+  X-User-Role: ADMINISTRATOR
+}
+
+body:json {
+  {
+    "name": "Supino Reto com Barra",
+    "muscleGroup": "CHEST",
+    "description": "Exercício composto para peitoral",
+    "equipment": "Barra e banco",
+    "difficultyLevel": "INTERMEDIATE",
+    "videoUrl": "https://example.com/supino",
+    "imageUrl": "https://example.com/supino.png"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    bru.setEnvVar("exerciseId", res.getBody().id);
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.status: eq ACTIVE
+}
+
+docs {
+  RF-011 — Administrator or Instructor may register. Captures exerciseId.
+  Re-run with a different name against a non-fresh DB (repeat name -> 409).
+}

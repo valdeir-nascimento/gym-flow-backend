@@ -1,0 +1,42 @@
+meta {
+  name: Transfer Bond (200)
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/users/bonds/transfer
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "studentId": "{{studentId}}",
+    "newInstructorId": "{{instructorId}}",
+    "actor": "{{adminId}}"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    bru.setEnvVar("bondId", res.getBody().id);
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.active: eq true
+}
+
+docs {
+  RF-016 — closes the previous bond (preserving history) and opens a new one.
+  For a real transfer use a different (active) instructor as newInstructorId;
+  here it reuses the same instructor so the collection stays self-contained.
+  Re-captures bondId (the new active bond).
+}

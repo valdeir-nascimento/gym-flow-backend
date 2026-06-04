@@ -1,0 +1,34 @@
+meta {
+  name: Change Status - last administrator (409)
+  type: http
+  seq: 10
+}
+
+patch {
+  url: {{baseUrl}}/users/{{adminId}}/status
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: 99999999-9999-9999-9999-999999999999
+  X-User-Role: ADMINISTRATOR
+}
+
+body:json {
+  {
+    "status": "INACTIVE"
+  }
+}
+
+assert {
+  res.status: eq 409
+}
+
+docs {
+  RF-012 — deactivating the only active administrator is blocked -> 409. The
+  actor here is a different (non-self) administrator so the last-admin guard is
+  what trips, not the self-management guard.
+}

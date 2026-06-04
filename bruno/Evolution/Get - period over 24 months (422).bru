@@ -1,0 +1,31 @@
+meta {
+  name: Get - period over 24 months (422)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/evolution?studentId={{studentId}}&from=2023-01-01T00:00:00Z&to=2026-01-01T00:00:00Z
+  body: none
+  auth: none
+}
+
+params:query {
+  studentId: {{studentId}}
+  from: 2023-01-01T00:00:00Z
+  to: 2026-01-01T00:00:00Z
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: {{studentId}}
+  X-User-Role: STUDENT
+}
+
+assert {
+  res.status: eq 422
+}
+
+docs {
+  RF-008 — a window wider than 24 months -> 422 EVOLUTION_PERIOD_TOO_LONG.
+}

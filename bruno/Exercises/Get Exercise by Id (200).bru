@@ -1,0 +1,20 @@
+meta {
+  name: Get Exercise by Id (200)
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/exercises/{{exerciseId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{exerciseId}}
+}

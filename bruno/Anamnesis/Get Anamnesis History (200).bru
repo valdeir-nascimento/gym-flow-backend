@@ -1,0 +1,26 @@
+meta {
+  name: Get Anamnesis History (200)
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/users/{{studentId}}/anamnesis/history
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: {{adminId}}
+  X-User-Role: ADMINISTRATOR
+}
+
+assert {
+  res.status: eq 200
+  res.body: isArray
+}
+
+docs {
+  RF-017 — all revisions, most recent first. Same ownership policy as the latest.
+}

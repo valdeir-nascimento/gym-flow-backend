@@ -1,0 +1,21 @@
+meta {
+  name: Get Execution - not found (404)
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/workout-executions/00000000-0000-0000-0000-0000000000cc
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: {{studentId}}
+  X-User-Role: STUDENT
+}
+
+assert {
+  res.status: eq 404
+}

@@ -1,0 +1,33 @@
+meta {
+  name: Assign - duplicate active bond (409)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/users/bonds
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "studentId": "{{studentId}}",
+    "instructorId": "{{instructorId}}",
+    "createdBy": "{{adminId}}"
+  }
+}
+
+assert {
+  res.status: eq 409
+}
+
+docs {
+  RF-016 — a student may have at most one active bond; assigning again -> 409.
+  Run after the successful assign.
+}

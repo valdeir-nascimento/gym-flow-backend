@@ -1,0 +1,34 @@
+meta {
+  name: Change Status to ACTIVE (200)
+  type: http
+  seq: 8
+}
+
+patch {
+  url: {{baseUrl}}/users/{{studentId}}/status
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: {{adminId}}
+  X-User-Role: ADMINISTRATOR
+}
+
+body:json {
+  {
+    "status": "ACTIVE"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.status: eq ACTIVE
+}
+
+docs {
+  RF-012 — admin activates the registered student (PENDING_FIRST_ACCESS ->
+  ACTIVE). Handy so the student is ACTIVE for bond/training flows.
+}

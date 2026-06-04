@@ -1,0 +1,41 @@
+meta {
+  name: Register Instructor (201)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/users/instructors
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "name": "Professor de Teste",
+    "email": "{{instructorEmail}}",
+    "phone": "+5511977776666",
+    "birthDate": "1992-03-10",
+    "createdBy": "{{adminId}}"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    bru.setEnvVar("instructorId", res.getBody().id);
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.role: eq INSTRUCTOR
+}
+
+docs {
+  RF-002 — only an Administrator may create instructors. Captures instructorId.
+}

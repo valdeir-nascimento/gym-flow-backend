@@ -1,0 +1,26 @@
+meta {
+  name: Remove Bond - other instructor (403)
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/users/bonds/{{bondId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: 88888888-8888-8888-8888-888888888888
+  X-User-Role: INSTRUCTOR
+}
+
+assert {
+  res.status: eq 403
+}
+
+docs {
+  RF-016 — an instructor cannot remove a bond that belongs to another instructor
+  -> 403. Run while the bond is active (before the successful remove).
+}

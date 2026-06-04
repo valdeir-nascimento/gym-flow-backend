@@ -1,0 +1,35 @@
+meta {
+  name: Register Student - email taken (409)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/users/students
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "name": "Aluno Duplicado",
+    "email": "{{studentEmail}}",
+    "phone": "+5511988887777",
+    "birthDate": "2000-05-20",
+    "createdBy": "{{adminId}}",
+    "createdByRole": "ADMINISTRATOR"
+  }
+}
+
+assert {
+  res.status: eq 409
+}
+
+docs {
+  RF-001 — e-mail already registered -> 409. Run after `Register Student (201)`.
+}

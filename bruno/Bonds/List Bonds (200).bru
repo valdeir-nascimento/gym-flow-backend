@@ -1,0 +1,30 @@
+meta {
+  name: List Bonds (200)
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/users/bonds?instructorId={{instructorId}}&page=0&size=20
+  body: none
+  auth: none
+}
+
+params:query {
+  instructorId: {{instructorId}}
+  page: 0
+  size: 20
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.totalElements: isNumber
+}
+
+docs {
+  RF-016 — paginated bonds, filterable by instructorId or studentId.
+}

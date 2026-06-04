@@ -1,0 +1,54 @@
+meta {
+  name: 02 Create Training (201)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/trainings
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: {{instructorId}}
+  X-User-Role: ADMINISTRATOR
+}
+
+body:json {
+  {
+    "studentId": "{{studentId}}",
+    "name": "Treino A - Full Body",
+    "objective": "Hipertrofia",
+    "startDate": "2026-06-01",
+    "endDate": "2026-08-31",
+    "items": [
+      {
+        "exerciseId": "{{exerciseId}}",
+        "sets": 4,
+        "repetitions": 10,
+        "load": 40.00,
+        "restSeconds": 60
+      }
+    ]
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    bru.setEnvVar("trainingId", res.getBody().id);
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.status: eq ACTIVE
+}
+
+docs {
+  RF-004 — prescribes a training. Requires the student ACTIVE (run Users ->
+  "Change Status to ACTIVE" first, else 422 TRAINING_STUDENT_INACTIVE). Acting
+  role ADMINISTRATOR bypasses the bond check. Captures trainingId.
+}

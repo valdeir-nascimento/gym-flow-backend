@@ -1,0 +1,27 @@
+meta {
+  name: Remove Bond (200)
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/users/bonds/{{bondId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: {{adminId}}
+  X-User-Role: ADMINISTRATOR
+}
+
+assert {
+  res.status: eq 200
+  res.body.active: eq false
+}
+
+docs {
+  RF-016 — ends the active bond (sets dataFim), keeping it for history. The
+  administrator may remove any bond.
+}

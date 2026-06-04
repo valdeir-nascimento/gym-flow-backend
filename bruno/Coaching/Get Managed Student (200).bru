@@ -1,0 +1,27 @@
+meta {
+  name: Get Managed Student (200)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/instructor/students/{{studentId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: {{adminId}}
+  X-User-Role: ADMINISTRATOR
+}
+
+assert {
+  res.status: eq 200
+  res.body.studentId: eq {{studentId}}
+}
+
+docs {
+  RF-010 — a student's progress indicators for the professor. Acting as
+  ADMINISTRATOR bypasses the bond check; a bonded instructor also gets 200.
+}

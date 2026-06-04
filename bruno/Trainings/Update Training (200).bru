@@ -1,0 +1,41 @@
+meta {
+  name: Update Training (200)
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/trainings/{{trainingId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: {{instructorId}}
+  X-User-Role: ADMINISTRATOR
+}
+
+body:json {
+  {
+    "name": "Treino A - Full Body (revisado)",
+    "objective": "Hipertrofia e resistência",
+    "startDate": "2026-06-01",
+    "endDate": "2026-09-30",
+    "items": [
+      { "exerciseId": "{{exerciseId}}", "sets": 5, "repetitions": 8, "load": 45.00, "restSeconds": 90 }
+    ],
+    "status": "ACTIVE"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.name: eq Treino A - Full Body (revisado)
+}
+
+docs {
+  RF-005 — updates the training (owner instructor or admin). status optional;
+  ARCHIVED rejects further edits (409 TRAINING_ARCHIVED).
+}

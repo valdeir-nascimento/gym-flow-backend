@@ -1,0 +1,40 @@
+meta {
+  name: Assign Student to Instructor (201)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/users/bonds
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "studentId": "{{studentId}}",
+    "instructorId": "{{instructorId}}",
+    "createdBy": "{{adminId}}"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    bru.setEnvVar("bondId", res.getBody().id);
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.active: eq true
+}
+
+docs {
+  RF-016 — creates the student↔instructor bond. Requires `Register Student` and
+  `Register Instructor` first. Captures bondId.
+}

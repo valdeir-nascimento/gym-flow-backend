@@ -1,0 +1,33 @@
+meta {
+  name: Assign - participant not found (404)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/users/bonds
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "studentId": "00000000-0000-0000-0000-0000000000ff",
+    "instructorId": "{{instructorId}}",
+    "createdBy": "{{adminId}}"
+  }
+}
+
+assert {
+  res.status: eq 404
+}
+
+docs {
+  RF-016 — unknown participant -> 404. (An INACTIVE student/instructor would
+  instead return 422 BOND_INACTIVE_PARTICIPANT.)
+}

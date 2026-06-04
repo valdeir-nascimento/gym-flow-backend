@@ -1,0 +1,30 @@
+meta {
+  name: List Users (200)
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/users?page=0&size=20&role=STUDENT
+  body: none
+  auth: none
+}
+
+params:query {
+  page: 0
+  size: 20
+  role: STUDENT
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.totalElements: isNumber
+}
+
+docs {
+  RF-012 — paginated list with optional filters (role, status, search).
+}
