@@ -16,4 +16,13 @@ interface RefreshTokenSpringRepository extends JpaRepository<RefreshTokenJpaEnti
     @Modifying
     @Query("UPDATE RefreshTokenJpaEntity t SET t.revokedAt = :now WHERE t.userId = :userId AND t.revokedAt IS NULL")
     int revokeAllByUserId(@Param("userId") UUID userId, @Param("now") Instant now);
+
+    @Modifying
+    @Query("""
+        UPDATE RefreshTokenJpaEntity t SET t.revokedAt = :now
+        WHERE t.userId = :userId AND t.revokedAt IS NULL AND t.tokenHash <> :keepHash
+        """)
+    int revokeAllByUserIdExcept(@Param("userId") UUID userId,
+                                @Param("keepHash") String keepHash,
+                                @Param("now") Instant now);
 }

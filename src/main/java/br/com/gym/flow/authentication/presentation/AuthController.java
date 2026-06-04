@@ -2,6 +2,8 @@ package br.com.gym.flow.authentication.presentation;
 
 import br.com.gym.flow.shared.web.ClientIp;
 import br.com.gym.flow.authentication.application.usecase.AuthenticateUserUseCase;
+import br.com.gym.flow.authentication.application.usecase.ChangeOwnPasswordCommand;
+import br.com.gym.flow.authentication.application.usecase.ChangeOwnPasswordUseCase;
 import br.com.gym.flow.authentication.application.usecase.ConsumeInviteCommand;
 import br.com.gym.flow.authentication.application.usecase.ConsumeInviteUseCase;
 import br.com.gym.flow.authentication.application.usecase.LoginCommand;
@@ -22,9 +24,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/auth")
@@ -37,6 +42,7 @@ class AuthController {
     private final ConsumeInviteUseCase consumeInvite;
     private final RequestPasswordRecoveryUseCase requestPasswordRecovery;
     private final ResetPasswordUseCase resetPassword;
+    private final ChangeOwnPasswordUseCase changeOwnPassword;
 
     @PostMapping("/login")
     Result<TokenPairView> login(@Valid @RequestBody LoginRequest req, HttpServletRequest http) {
@@ -76,5 +82,13 @@ class AuthController {
                                @Valid @RequestBody ResetPasswordRequest req) {
         return resetPassword.execute(new ResetPasswordCommand(
             token, req.newPassword(), req.passwordConfirmation()));
+    }
+
+    @PostMapping("/change-password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    Result<Void> changePassword(@Valid @RequestBody ChangePasswordRequest req,
+                                @RequestHeader("X-User-Id") UUID userId) {
+        return changeOwnPassword.execute(new ChangeOwnPasswordCommand(
+            userId, req.currentPassword(), req.newPassword(), req.passwordConfirmation(), req.currentRefreshToken()));
     }
 }

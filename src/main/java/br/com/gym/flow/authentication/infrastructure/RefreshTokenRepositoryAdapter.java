@@ -33,4 +33,9 @@ class RefreshTokenRepositoryAdapter implements RefreshTokenRepository {
     public int revokeAllByUserId(UUID userId) {
         return jpa.revokeAllByUserId(userId, Instant.now(clock));
     }
+
+    @Override
+    public int revokeAllByUserIdExcept(UUID userId, String keepTokenHash) {
+        return jpa.revokeAllByUserIdExcept(userId, keepTokenHash, Instant.now(clock));
+    }
 }
