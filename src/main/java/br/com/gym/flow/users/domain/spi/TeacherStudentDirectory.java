@@ -1,5 +1,6 @@
 package br.com.gym.flow.users.domain.spi;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -10,4 +11,7 @@ import java.util.UUID;
 public interface TeacherStudentDirectory {
 
     boolean hasActiveBond(UUID studentId, UUID instructorId);
+
+    /** Ids of the students currently bonded to the instructor (RF-010). */
+    List<UUID> activeStudentIdsOf(UUID instructorId);
 }

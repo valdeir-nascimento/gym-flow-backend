@@ -1,6 +1,7 @@
 package br.com.gym.flow.history.application.service;
 
 import br.com.gym.flow.history.domain.WorkoutExecutionRepository;
+import br.com.gym.flow.history.domain.spi.WorkoutActivitySummary;
 import br.com.gym.flow.history.domain.spi.WorkoutExecutionDirectory;
 import br.com.gym.flow.history.domain.spi.WorkoutExecutionView;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,5 +30,11 @@ class WorkoutExecutionDirectoryAdapter implements WorkoutExecutionDirectory {
         return repository.findByStudentInWindow(studentId, from, to).stream()
             .map(WorkoutExecutionViewMapper::toView)
             .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<WorkoutActivitySummary> summariesOf(final Collection<UUID> studentIds) {
+        return repository.summariesOf(studentIds);
     }
 }

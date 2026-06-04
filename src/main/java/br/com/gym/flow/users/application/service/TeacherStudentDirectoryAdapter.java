@@ -6,6 +6,7 @@ import br.com.gym.flow.users.domain.spi.TeacherStudentDirectory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -23,5 +24,12 @@ class TeacherStudentDirectoryAdapter implements TeacherStudentDirectory {
         return bonds.findActiveByStudent(UserId.of(studentId))
             .map(bond -> bond.instructorId().equals(UserId.of(instructorId)))
             .orElse(false);
+    }
+
+    @Override
+    public List<UUID> activeStudentIdsOf(UUID instructorId) {
+        return bonds.findActiveByInstructor(UserId.of(instructorId)).stream()
+            .map(bond -> bond.studentId().value())
+            .toList();
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,6 +18,15 @@ interface WorkoutExecutionJpaSpringRepository extends JpaRepository<WorkoutExecu
     /** A student's executions in a started-at window, oldest first (RF-008). */
     List<WorkoutExecutionJpaEntity> findByStudentIdAndStartedAtBetweenOrderByStartedAtAsc(
         UUID studentId, Instant from, Instant to);
+
+    /** Count and latest start per student, in one query (RF-010). */
+    @Query("""
+        SELECT e.studentId, COUNT(e), MAX(e.startedAt)
+        FROM WorkoutExecutionJpaEntity e
+        WHERE e.studentId IN :studentIds
+        GROUP BY e.studentId
+        """)
+    List<Object[]> aggregateActivityByStudent(@Param("studentIds") Collection<UUID> studentIds);
 
     /**
      * History search (RF-009): always scoped to the student; the remaining filters

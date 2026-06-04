@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -32,6 +33,13 @@ class BondRepositoryAdapter implements BondRepository {
     @Override
     public Optional<TeacherStudentBond> findActiveByStudent(UserId studentId) {
         return jpa.findByStudentIdAndEndedAtIsNull(studentId.value()).map(BondJpaMapper::toDomain);
+    }
+
+    @Override
+    public List<TeacherStudentBond> findActiveByInstructor(UserId instructorId) {
+        return jpa.findByInstructorIdAndEndedAtIsNull(instructorId.value()).stream()
+            .map(BondJpaMapper::toDomain)
+            .toList();
     }
 
     @Override

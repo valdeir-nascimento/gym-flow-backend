@@ -1,9 +1,11 @@
 package br.com.gym.flow.history.domain;
 
+import br.com.gym.flow.history.domain.spi.WorkoutActivitySummary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,4 +32,7 @@ public interface WorkoutExecutionRepository {
      * window is bounded by the caller (≤ 24 months).
      */
     List<WorkoutExecution> findByStudentInWindow(UUID studentId, Instant from, Instant to);
+
+    /** Activity summary (count + last start) for each given student (RF-010). */
+    List<WorkoutActivitySummary> summariesOf(Collection<UUID> studentIds);
 }
