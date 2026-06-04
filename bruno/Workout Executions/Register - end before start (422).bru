@@ -1,0 +1,43 @@
+meta {
+  name: Register - end before start (422)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/trainings/{{trainingId}}/executions
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: {{studentId}}
+}
+
+script:pre-request {
+  // finishedAt before startedAt (both in the past) -> business-rule violation.
+  const now = Date.now();
+  bru.setVar("startedAt", new Date(now - 1800000).toISOString());
+  bru.setVar("finishedAt", new Date(now - 3600000).toISOString());
+}
+
+body:json {
+  {
+    "startedAt": "{{startedAt}}",
+    "finishedAt": "{{finishedAt}}",
+    "items": [
+      { "exerciseId": "{{exerciseId}}", "sets": 4, "repetitions": 10, "load": 42.50 }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 422
+}
+
+docs {
+  RF-007 — finishedAt before startedAt -> 422 EXECUTION_END_BEFORE_START.
+  (A future timestamp would instead be 400 EXECUTION_FUTURE_DATETIME.)
+}

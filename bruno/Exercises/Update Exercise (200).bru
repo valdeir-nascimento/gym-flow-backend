@@ -1,0 +1,38 @@
+meta {
+  name: Update Exercise (200)
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/exercises/{{exerciseId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+  X-User-Role: ADMINISTRATOR
+}
+
+body:json {
+  {
+    "name": "Supino Reto com Barra",
+    "muscleGroup": "CHEST",
+    "description": "Atualizado: foco em amplitude completa",
+    "equipment": "Barra e banco",
+    "difficultyLevel": "ADVANCED",
+    "videoUrl": "https://example.com/supino",
+    "imageUrl": "https://example.com/supino.png"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.difficultyLevel: eq ADVANCED
+}
+
+docs {
+  RF-011 — updates the catalog entry (Administrator/Instructor per CatalogRoles).
+}

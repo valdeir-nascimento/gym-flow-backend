@@ -1,0 +1,40 @@
+meta {
+  name: Create - instructor not linked (403)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/trainings
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: 88888888-8888-8888-8888-888888888888
+  X-User-Role: INSTRUCTOR
+}
+
+body:json {
+  {
+    "studentId": "{{studentId}}",
+    "name": "Treino por professor não vinculado",
+    "objective": "Hipertrofia",
+    "startDate": "2026-06-01",
+    "endDate": "2026-08-31",
+    "items": [
+      { "exerciseId": "{{exerciseId}}", "sets": 4, "repetitions": 10, "load": 40.00, "restSeconds": 60 }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 403
+}
+
+docs {
+  RF-004 — an instructor not bonded to the student (and not admin) -> 403
+  TRAINING_INSTRUCTOR_NOT_LINKED.
+}

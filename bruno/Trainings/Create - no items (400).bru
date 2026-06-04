@@ -1,0 +1,37 @@
+meta {
+  name: Create - no items (400)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/trainings
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: {{instructorId}}
+  X-User-Role: ADMINISTRATOR
+}
+
+body:json {
+  {
+    "studentId": "{{studentId}}",
+    "name": "Treino sem itens",
+    "objective": "Hipertrofia",
+    "startDate": "2026-06-01",
+    "endDate": "2026-08-31",
+    "items": []
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+docs {
+  RF-004 — a training needs at least one item (@NotEmpty) -> 400.
+}

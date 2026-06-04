@@ -1,0 +1,57 @@
+meta {
+  name: Register Execution (201)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/trainings/{{trainingId}}/executions
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: {{studentId}}
+}
+
+script:pre-request {
+  // Executions must be in the past relative to the server clock.
+  const now = Date.now();
+  bru.setVar("startedAt", new Date(now - 3600000).toISOString());
+  bru.setVar("finishedAt", new Date(now - 1800000).toISOString());
+}
+
+body:json {
+  {
+    "startedAt": "{{startedAt}}",
+    "finishedAt": "{{finishedAt}}",
+    "notes": "Treino concluído, boa execução",
+    "items": [
+      {
+        "exerciseId": "{{exerciseId}}",
+        "sets": 4,
+        "repetitions": 10,
+        "load": 42.50,
+        "notes": "Aumentei a carga"
+      }
+    ]
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    bru.setEnvVar("executionId", res.getBody().id);
+  }
+}
+
+assert {
+  res.status: eq 201
+}
+
+docs {
+  RF-007 — the student registers a workout execution for their (active) training.
+  Timestamps are computed in the past so they are never rejected as future.
+  Location points to /workout-executions/{id}. Captures executionId.
+}

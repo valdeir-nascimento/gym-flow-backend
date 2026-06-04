@@ -1,0 +1,32 @@
+meta {
+  name: 01 Consume Bootstrap Invite (204)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/auth/invites/{{bootstrapInvite}}/consume
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "newPassword": "{{adminPassword}}",
+    "passwordConfirmation": "{{adminPassword}}"
+  }
+}
+
+assert {
+  res.status: eq 204
+}
+
+docs {
+  RF-013 — first access. Sets the bootstrap admin password and activates the
+  account. No auto-login: returns 204; authenticate with `02 Login` next.
+  Re-running returns 410 (invite already consumed).
+}

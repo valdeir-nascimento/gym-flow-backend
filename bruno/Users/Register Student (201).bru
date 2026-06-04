@@ -1,0 +1,44 @@
+meta {
+  name: Register Student (201)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/users/students
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "name": "Aluno de Teste",
+    "email": "{{studentEmail}}",
+    "phone": "+5511988887777",
+    "birthDate": "2000-05-20",
+    "createdBy": "{{adminId}}",
+    "createdByRole": "ADMINISTRATOR"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    bru.setEnvVar("studentId", res.getBody().id);
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.role: eq STUDENT
+  res.body.status: eq PENDING_FIRST_ACCESS
+}
+
+docs {
+  RF-001 — captures the new student id. An invite is e-mailed for first access.
+  Re-run against a fresh DB or change the email (a repeat returns 409).
+}

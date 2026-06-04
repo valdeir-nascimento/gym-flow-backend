@@ -1,0 +1,32 @@
+meta {
+  name: Change Status - self (422)
+  type: http
+  seq: 9
+}
+
+patch {
+  url: {{baseUrl}}/users/{{adminId}}/status
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: {{adminId}}
+  X-User-Role: ADMINISTRATOR
+}
+
+body:json {
+  {
+    "status": "INACTIVE"
+  }
+}
+
+assert {
+  res.status: eq 422
+}
+
+docs {
+  RF-012 — an administrator cannot change the status of their own account -> 422.
+}

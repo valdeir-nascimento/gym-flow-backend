@@ -1,0 +1,34 @@
+meta {
+  name: Change Role (200)
+  type: http
+  seq: 11
+}
+
+patch {
+  url: {{baseUrl}}/users/{{studentId}}/role
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: {{adminId}}
+  X-User-Role: ADMINISTRATOR
+}
+
+body:json {
+  {
+    "role": "STUDENT"
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  RF-012 — admin changes a user's role; audited via UserRoleChanged. Sends
+  STUDENT (a no-op for the seeded student) to avoid breaking downstream
+  student flows — change to INSTRUCTOR/ADMINISTRATOR to exercise a real change.
+}

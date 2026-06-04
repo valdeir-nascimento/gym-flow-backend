@@ -1,0 +1,32 @@
+meta {
+  name: List Exercises (200)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/exercises?page=0&size=20&muscleGroup=CHEST&status=ACTIVE
+  body: none
+  auth: none
+}
+
+params:query {
+  page: 0
+  size: 20
+  muscleGroup: CHEST
+  status: ACTIVE
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.totalElements: isNumber
+}
+
+docs {
+  RF-011 — paginated catalog with filters (muscleGroup, difficultyLevel,
+  equipment, search, status).
+}

@@ -1,0 +1,26 @@
+meta {
+  name: Get Execution by Id (200)
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/workout-executions/{{executionId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: {{studentId}}
+  X-User-Role: STUDENT
+}
+
+assert {
+  res.status: eq 200
+  res.body.id: eq {{executionId}}
+}
+
+docs {
+  RF-009 — execution detail. Ownership: the student, or an admin (others 403).
+}

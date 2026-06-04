@@ -1,0 +1,32 @@
+meta {
+  name: List - another student (403)
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/trainings?studentId={{studentId}}&page=0&size=20
+  body: none
+  auth: none
+}
+
+params:query {
+  studentId: {{studentId}}
+  page: 0
+  size: 20
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: 77777777-7777-7777-7777-777777777777
+  X-User-Role: STUDENT
+}
+
+assert {
+  res.status: eq 403
+}
+
+docs {
+  RF-006 — a student trying to read another student's trainings -> 403
+  TRAINING_NOT_STUDENT_OWNER.
+}

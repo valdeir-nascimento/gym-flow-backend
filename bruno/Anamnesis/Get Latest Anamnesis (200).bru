@@ -1,0 +1,27 @@
+meta {
+  name: Get Latest Anamnesis (200)
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/users/{{studentId}}/anamnesis
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: {{adminId}}
+  X-User-Role: ADMINISTRATOR
+}
+
+assert {
+  res.status: eq 200
+  res.body.studentId: eq {{studentId}}
+}
+
+docs {
+  RF-017 — current (highest-version) revision. Ownership: the student, their
+  bonded instructor, or an admin (otherwise 403; 404 when there is no revision).
+}

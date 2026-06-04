@@ -1,0 +1,30 @@
+meta {
+  name: Get - another student (403)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/evolution?studentId={{studentId}}
+  body: none
+  auth: none
+}
+
+params:query {
+  studentId: {{studentId}}
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: 77777777-7777-7777-7777-777777777777
+  X-User-Role: STUDENT
+}
+
+assert {
+  res.status: eq 403
+}
+
+docs {
+  RF-008 — a student cannot read another student's evolution -> 403
+  EVOLUTION_NOT_OWNED.
+}

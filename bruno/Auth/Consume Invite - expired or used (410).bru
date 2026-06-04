@@ -1,0 +1,31 @@
+meta {
+  name: Consume Invite - expired or used (410)
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/auth/invites/token-inexistente-ou-consumido/consume
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "newPassword": "QualquerSenha@123",
+    "passwordConfirmation": "QualquerSenha@123"
+  }
+}
+
+assert {
+  res.status: eq 410
+}
+
+docs {
+  RF-013 — single-use invite token that is unknown / expired / already consumed
+  returns 410 Gone. (Re-running `01 Consume Bootstrap Invite` also yields 410.)
+}

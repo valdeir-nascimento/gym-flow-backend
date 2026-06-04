@@ -1,0 +1,32 @@
+meta {
+  name: Update Me (200)
+  type: http
+  seq: 13
+}
+
+patch {
+  url: {{baseUrl}}/users/me
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: {{adminId}}
+}
+
+body:json {
+  {
+    "phone": "+5511900001111"
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  RF-015 — updates the caller's own profile (name/phone/birthDate). Immutable
+  fields (email/role/status) are not part of this contract.
+}

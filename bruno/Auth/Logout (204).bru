@@ -1,0 +1,31 @@
+meta {
+  name: Logout (204)
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/auth/logout
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "refreshToken": "{{refreshToken}}"
+  }
+}
+
+assert {
+  res.status: eq 204
+}
+
+docs {
+  RF-003 — revokes the given refresh token. Run last; afterwards re-run
+  `02 Login` to obtain a fresh session.
+}

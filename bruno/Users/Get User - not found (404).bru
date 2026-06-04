@@ -1,0 +1,19 @@
+meta {
+  name: Get User - not found (404)
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/users/00000000-0000-0000-0000-0000000000ff
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+assert {
+  res.status: eq 404
+}

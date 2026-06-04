@@ -1,0 +1,42 @@
+meta {
+  name: Register Anamnesis (201)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/users/{{studentId}}/anamnesis
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: {{adminId}}
+  X-User-Role: ADMINISTRATOR
+}
+
+body:json {
+  {
+    "weightKg": 80.50,
+    "heightCm": 178,
+    "objectives": "Hipertrofia e ganho de força",
+    "conditioningHistory": "Praticante intermediário, 2 anos de treino",
+    "injuries": ["Lesão prévia no ombro direito"],
+    "medicalRestrictions": ["Hipertensão controlada"],
+    "contraindications": [],
+    "observations": "Avaliação física inicial"
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.version: isNumber
+}
+
+docs {
+  RF-017 — creates a versioned anamnesis revision (acting as admin bypasses the
+  bond check). Requires `Grant Health Consent` first, else 403. Re-running
+  creates a new revision (version + 1).
+}

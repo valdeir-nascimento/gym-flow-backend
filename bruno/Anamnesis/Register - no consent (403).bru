@@ -1,0 +1,37 @@
+meta {
+  name: Register - no consent (403)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/users/55555555-5555-5555-5555-555555555555/anamnesis
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: {{adminId}}
+  X-User-Role: ADMINISTRATOR
+}
+
+body:json {
+  {
+    "weightKg": 80.50,
+    "heightCm": 178,
+    "objectives": "Hipertrofia",
+    "contraindications": []
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.body.errors[0].code: eq LGPD_CONSENT_REQUIRED
+}
+
+docs {
+  RF-017 — a student without a prior health-data consent cannot have an anamnesis
+  registered -> 403 LGPD_CONSENT_REQUIRED. Uses a student id with no consent.
+}

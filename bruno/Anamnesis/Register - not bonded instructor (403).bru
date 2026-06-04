@@ -1,0 +1,37 @@
+meta {
+  name: Register - not bonded instructor (403)
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/users/{{studentId}}/anamnesis
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: 88888888-8888-8888-8888-888888888888
+  X-User-Role: INSTRUCTOR
+}
+
+body:json {
+  {
+    "weightKg": 80.50,
+    "heightCm": 178,
+    "objectives": "Hipertrofia",
+    "contraindications": []
+  }
+}
+
+assert {
+  res.status: eq 403
+  res.body.errors[0].code: eq STUDENT_NOT_MANAGED
+}
+
+docs {
+  RF-017 — an instructor not bonded to the student (and not an admin) cannot
+  register the anamnesis -> 403 STUDENT_NOT_MANAGED.
+}

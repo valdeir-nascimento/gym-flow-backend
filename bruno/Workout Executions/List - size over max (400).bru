@@ -1,0 +1,32 @@
+meta {
+  name: List - size over max (400)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/workout-executions?studentId={{studentId}}&page=0&size=101
+  body: none
+  auth: none
+}
+
+params:query {
+  studentId: {{studentId}}
+  page: 0
+  size: 101
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: {{studentId}}
+  X-User-Role: STUDENT
+}
+
+assert {
+  res.status: eq 400
+}
+
+docs {
+  RF-009 / RNF-002 — page size is capped at 100; size=101 -> 400 (parameter
+  validation).
+}

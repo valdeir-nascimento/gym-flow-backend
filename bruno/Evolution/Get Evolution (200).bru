@@ -1,0 +1,33 @@
+meta {
+  name: Get Evolution (200)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/evolution?studentId={{studentId}}&granularity=WEEKLY
+  body: none
+  auth: none
+}
+
+params:query {
+  studentId: {{studentId}}
+  granularity: WEEKLY
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  X-User-Id: {{studentId}}
+  X-User-Role: STUDENT
+}
+
+assert {
+  res.status: eq 200
+  res.body.studentId: eq {{studentId}}
+}
+
+docs {
+  RF-008 — frequency / volume / estimated 1RM indicators. granularity WEEKLY or
+  MONTHLY (default WEEKLY); optional from/to (default last 6 months). Empty
+  series when there is no data (still 200).
+}

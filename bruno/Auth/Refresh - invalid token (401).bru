@@ -1,0 +1,25 @@
+meta {
+  name: Refresh - invalid token (401)
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/auth/refresh
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "refreshToken": "nao-existe-este-refresh-token"
+  }
+}
+
+assert {
+  res.status: eq 401
+}
