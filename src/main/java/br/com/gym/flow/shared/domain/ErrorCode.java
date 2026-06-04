@@ -79,6 +79,13 @@ public enum ErrorCode {
     PASSWORD_PWNED(ErrorCategory.BUSINESS_RULE, "senha presente em lista de vazadas"),
     PASSWORD_MISMATCH(ErrorCategory.VALIDATION, "confirmação de senha não confere"),
 
+    // Anamnesis / health assessment (RF-017, RNF-008)
+    LGPD_CONSENT_REQUIRED(ErrorCategory.FORBIDDEN, "consentimento de tratamento de dados de saúde necessário"),
+    ANAMNESIS_NOT_FOUND(ErrorCategory.NOT_FOUND, "anamnese não encontrada"),
+    ANAMNESIS_NOT_OWNED(ErrorCategory.FORBIDDEN, "anamnese pertence a outro aluno"),
+    ANAMNESIS_IMPLAUSIBLE_WEIGHT(ErrorCategory.BUSINESS_RULE, "peso fora da faixa plausível"),
+    ANAMNESIS_IMPLAUSIBLE_HEIGHT(ErrorCategory.BUSINESS_RULE, "altura fora da faixa plausível"),
+
     // Mail
     MAIL_DELIVERY_FAILED(ErrorCategory.INFRASTRUCTURE, "falha ao enviar e-mail");
 
