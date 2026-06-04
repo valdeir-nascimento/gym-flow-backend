@@ -37,6 +37,7 @@ class ChangeUserStatusUseCaseTest {
 
     private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-06-01T12:00:00Z"), ZoneOffset.UTC);
     private static final UserId USER_ID = UserId.of(UUID.fromString("00000000-0000-0000-0000-0000000000a1"));
+    private static final UserId ACTOR = UserId.of(UUID.fromString("00000000-0000-0000-0000-0000000000ad"));
 
     @Mock
     private UserRepository repository;
@@ -61,7 +62,7 @@ class ChangeUserStatusUseCaseTest {
         when(repository.findById(USER_ID)).thenReturn(Optional.empty());
 
         // When
-        var result = useCase.execute(new ChangeUserStatusCommand(USER_ID, UserStatus.ACTIVE));
+        var result = useCase.execute(new ChangeUserStatusCommand(USER_ID, UserStatus.ACTIVE, ACTOR));
 
         // Then
         assertThat(failureOf(result).hasAnyCode(ErrorCode.USER_NOT_FOUND)).isTrue();
@@ -77,12 +78,23 @@ class ChangeUserStatusUseCaseTest {
         when(repository.countActiveAdministrators()).thenReturn(1L);
 
         // When
-        var result = useCase.execute(new ChangeUserStatusCommand(USER_ID, UserStatus.INACTIVE));
+        var result = useCase.execute(new ChangeUserStatusCommand(USER_ID, UserStatus.INACTIVE, ACTOR));
 
-        // Then
-        assertThat(failureOf(result).hasAnyCode(ErrorCode.INVALID_USER_STATUS_TRANSITION)).isTrue();
+        // Then — CONFLICT (409)
+        assertThat(failureOf(result).hasAnyCode(ErrorCode.USER_LAST_ADMINISTRATOR)).isTrue();
         verify(repository, never()).save(any());
         verifyNoInteractions(events);
+    }
+
+    @Test
+    void givenActorChangingOwnStatus_whenChanging_thenFailsSelfManagement() {
+        // Given — actor equals the target user
+        // When
+        var result = useCase.execute(new ChangeUserStatusCommand(USER_ID, UserStatus.INACTIVE, USER_ID));
+
+        // Then — 422, the repository is never touched
+        assertThat(failureOf(result).hasAnyCode(ErrorCode.USER_SELF_MANAGEMENT)).isTrue();
+        verifyNoInteractions(repository, events);
     }
 
     @Test
@@ -94,7 +106,7 @@ class ChangeUserStatusUseCaseTest {
         when(repository.save(any())).then(returnsFirstArg());
 
         // When
-        var result = useCase.execute(new ChangeUserStatusCommand(USER_ID, UserStatus.INACTIVE));
+        var result = useCase.execute(new ChangeUserStatusCommand(USER_ID, UserStatus.INACTIVE, ACTOR));
 
         // Then
         assertThat(result.isSuccess()).isTrue();
@@ -109,7 +121,7 @@ class ChangeUserStatusUseCaseTest {
         when(repository.findById(USER_ID)).thenReturn(Optional.of(pending));
 
         // When
-        var result = useCase.execute(new ChangeUserStatusCommand(USER_ID, UserStatus.BLOCKED));
+        var result = useCase.execute(new ChangeUserStatusCommand(USER_ID, UserStatus.BLOCKED, ACTOR));
 
         // Then
         assertThat(failureOf(result).hasAnyCode(ErrorCode.INVALID_USER_STATUS_TRANSITION)).isTrue();
@@ -125,7 +137,7 @@ class ChangeUserStatusUseCaseTest {
         when(repository.save(any())).then(returnsFirstArg());
 
         // When
-        var result = useCase.execute(new ChangeUserStatusCommand(USER_ID, UserStatus.ACTIVE));
+        var result = useCase.execute(new ChangeUserStatusCommand(USER_ID, UserStatus.ACTIVE, ACTOR));
 
         // Then
         assertThat(result.isSuccess()).isTrue();

@@ -19,7 +19,7 @@ public class User extends AggregateRoot<UserId> {
     private final Email email;
     private PhoneNumber phone;
     private BirthDate birthDate;
-    private final Role role;
+    private Role role;
     private UserStatus status;
     private final UserId createdBy;
     private final Instant createdAt;
@@ -146,6 +146,24 @@ public class User extends AggregateRoot<UserId> {
             notification.addError("birthDate", ErrorCode.INVALID_BIRTH_DATE);
             return this.birthDate;
         }
+    }
+
+    /**
+     * Changes the user's role (RF-012, administrator-only). A no-op when the role
+     * is unchanged; otherwise records the audit trail in {@link UserRoleChanged}.
+     * Authorization and the "at least one active administrator" guard live in the
+     * use case.
+     */
+    public Result<Void> changeRole(final Role newRole, final Clock clock) {
+        if (this.role == newRole) {
+            return Result.ok();
+        }
+        final Instant now = Instant.now(clock);
+        final Role previous = this.role;
+        this.role = newRole;
+        this.updatedAt = now;
+        registerEvent(UserRoleChanged.of(id().value(), previous.name(), newRole.name(), now));
+        return Result.ok();
     }
 
     public Result<Void> activate(final Clock clock) {

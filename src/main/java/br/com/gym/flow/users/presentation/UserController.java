@@ -2,6 +2,8 @@ package br.com.gym.flow.users.presentation;
 
 import br.com.gym.flow.shared.domain.ErrorCode;
 import br.com.gym.flow.shared.domain.Result;
+import br.com.gym.flow.users.application.usecase.ChangeUserRoleCommand;
+import br.com.gym.flow.users.application.usecase.ChangeUserRoleUseCase;
 import br.com.gym.flow.users.application.usecase.ChangeUserStatusCommand;
 import br.com.gym.flow.users.application.usecase.ChangeUserStatusUseCase;
 import br.com.gym.flow.users.application.usecase.GetUserQuery;
@@ -48,6 +50,7 @@ class UserController {
     private final ListUsersUseCase listUsers;
     private final GetUserUseCase getUser;
     private final ChangeUserStatusUseCase changeUserStatus;
+    private final ChangeUserRoleUseCase changeUserRole;
     private final UpdateOwnProfileUseCase updateOwnProfile;
 
     @PostMapping("/students")
@@ -97,14 +100,29 @@ class UserController {
     }
 
     @PatchMapping("/{id}/status")
-    Result<UserView> changeStatus(@PathVariable UUID id, @Valid @RequestBody ChangeStatusRequest req) {
+    Result<UserView> changeStatus(@PathVariable UUID id,
+                                  @Valid @RequestBody ChangeStatusRequest req,
+                                  @RequestHeader("X-User-Id") UUID actorId) {
         final UserStatus target;
         try {
             target = UserStatus.valueOf(req.status());
         } catch (IllegalArgumentException ex) {
             return Result.failWith(ErrorCode.INVALID_INPUT, "status inválido: " + req.status());
         }
-        return changeUserStatus.execute(new ChangeUserStatusCommand(UserId.of(id), target));
+        return changeUserStatus.execute(new ChangeUserStatusCommand(UserId.of(id), target, UserId.of(actorId)));
+    }
+
+    @PatchMapping("/{id}/role")
+    Result<UserView> changeRole(@PathVariable UUID id,
+                                @Valid @RequestBody ChangeRoleRequest req,
+                                @RequestHeader("X-User-Id") UUID actorId) {
+        final Role target;
+        try {
+            target = Role.valueOf(req.role());
+        } catch (IllegalArgumentException ex) {
+            return Result.failWith(ErrorCode.INVALID_INPUT, "perfil inválido: " + req.role());
+        }
+        return changeUserRole.execute(new ChangeUserRoleCommand(UserId.of(id), target, UserId.of(actorId)));
     }
 
     @GetMapping("/me")

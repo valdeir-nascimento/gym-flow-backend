@@ -13,6 +13,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
@@ -150,6 +151,16 @@ public class GlobalExceptionHandler {
         ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
         pd.setTitle("Parâmetros inválidos");
         pd.setDetail("Um ou mais parâmetros da requisição são inválidos (ex.: 'size' deve estar entre 1 e 100).");
+        return ResponseEntity.badRequest().body(pd);
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ProblemDetail> handleMissingHeader(MissingRequestHeaderException ex) {
+        // A required header (e.g. X-User-Id) was absent — a client error, not a 500.
+        log.info("missing request header: {}", ex.getHeaderName());
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        pd.setTitle("Cabeçalho obrigatório ausente");
+        pd.setDetail("Cabeçalho obrigatório ausente: " + ex.getHeaderName());
         return ResponseEntity.badRequest().body(pd);
     }
 

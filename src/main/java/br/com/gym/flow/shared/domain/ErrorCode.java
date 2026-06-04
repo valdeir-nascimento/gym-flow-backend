@@ -19,6 +19,8 @@ public enum ErrorCode {
     USER_NOT_PENDING_FIRST_ACCESS(ErrorCategory.UNAUTHORIZED, "usuário não está aguardando primeiro acesso"),
     INVALID_USER_STATUS_TRANSITION(ErrorCategory.BUSINESS_RULE, "transição de status inválida"),
     FORBIDDEN_ROLE(ErrorCategory.FORBIDDEN, "operação não permitida para o perfil"),
+    USER_SELF_MANAGEMENT(ErrorCategory.BUSINESS_RULE, "não é permitido alterar status ou perfil da própria conta"),
+    USER_LAST_ADMINISTRATOR(ErrorCategory.CONFLICT, "deve existir ao menos um administrador ativo"),
 
     // Bond — Aluno↔Professor (RF-016)
     BOND_NOT_FOUND(ErrorCategory.NOT_FOUND, "vínculo não encontrado"),

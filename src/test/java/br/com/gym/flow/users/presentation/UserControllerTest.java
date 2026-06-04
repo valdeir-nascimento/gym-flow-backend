@@ -70,6 +70,8 @@ class UserControllerTest {
     @MockitoBean
     private ChangeUserStatusUseCase changeUserStatus;
     @MockitoBean
+    private ChangeUserRoleUseCase changeUserRole;
+    @MockitoBean
     private UpdateOwnProfileUseCase updateOwnProfile;
 
     private static UserView studentView() {
@@ -249,17 +251,19 @@ class UserControllerTest {
 
             // When / Then
             mockMvc.perform(patch("/users/{id}/status", USER_ID)
+                    .header("X-User-Id", ADMIN_ID)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(USER_ID.toString()))
                 .andExpect(jsonPath("$.status").value("ACTIVE"));
 
-            // Then — path id + body status mapped into the command
+            // Then — path id + body status + actor header mapped into the command
             var captor = ArgumentCaptor.forClass(ChangeUserStatusCommand.class);
             verify(changeUserStatus).execute(captor.capture());
             assertThat(captor.getValue().userId()).isEqualTo(UserId.of(USER_ID));
             assertThat(captor.getValue().targetStatus()).isEqualTo(UserStatus.ACTIVE);
+            assertThat(captor.getValue().actorId()).isEqualTo(UserId.of(ADMIN_ID));
             verifyNoMoreInteractions(changeUserStatus);
         }
 
@@ -272,6 +276,7 @@ class UserControllerTest {
 
             // When / Then — BUSINESS_RULE category -> 422
             mockMvc.perform(patch("/users/{id}/status", USER_ID)
+                    .header("X-User-Id", ADMIN_ID)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnprocessableEntity());
@@ -284,6 +289,7 @@ class UserControllerTest {
 
             // When / Then
             mockMvc.perform(patch("/users/{id}/status", USER_ID)
+                    .header("X-User-Id", ADMIN_ID)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -298,11 +304,82 @@ class UserControllerTest {
 
             // When / Then — VALIDATION category -> 400
             mockMvc.perform(patch("/users/{id}/status", USER_ID)
+                    .header("X-User-Id", ADMIN_ID)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
 
             verifyNoInteractions(changeUserStatus);
+        }
+    }
+
+    @Nested
+    class ChangeRole {
+
+        @Test
+        void givenValidRole_whenChanging_thenReturns200AndMapsCommand() throws Exception {
+            // Given
+            when(changeUserRole.execute(any())).thenReturn(Result.success(studentView()));
+            var request = new ChangeRoleRequest("INSTRUCTOR");
+
+            // When / Then
+            mockMvc.perform(patch("/users/{id}/role", USER_ID)
+                    .header("X-User-Id", ADMIN_ID)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(USER_ID.toString()));
+
+            // Then — path id + body role + actor header mapped into the command
+            var captor = ArgumentCaptor.forClass(ChangeUserRoleCommand.class);
+            verify(changeUserRole).execute(captor.capture());
+            assertThat(captor.getValue().userId()).isEqualTo(UserId.of(USER_ID));
+            assertThat(captor.getValue().targetRole()).isEqualTo(Role.INSTRUCTOR);
+            assertThat(captor.getValue().actorId()).isEqualTo(UserId.of(ADMIN_ID));
+            verifyNoMoreInteractions(changeUserRole);
+        }
+
+        @Test
+        void givenSelfRoleChange_whenChanging_thenReturns422() throws Exception {
+            // Given — BUSINESS_RULE category -> 422
+            when(changeUserRole.execute(any())).thenReturn(Result.failWith(ErrorCode.USER_SELF_MANAGEMENT));
+            var request = new ChangeRoleRequest("INSTRUCTOR");
+
+            // When / Then
+            mockMvc.perform(patch("/users/{id}/role", USER_ID)
+                    .header("X-User-Id", USER_ID)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnprocessableEntity());
+        }
+
+        @Test
+        void givenDemotingLastAdministrator_whenChanging_thenReturns409() throws Exception {
+            // Given — CONFLICT category -> 409
+            when(changeUserRole.execute(any())).thenReturn(Result.failWith(ErrorCode.USER_LAST_ADMINISTRATOR));
+            var request = new ChangeRoleRequest("INSTRUCTOR");
+
+            // When / Then
+            mockMvc.perform(patch("/users/{id}/role", USER_ID)
+                    .header("X-User-Id", ADMIN_ID)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict());
+        }
+
+        @Test
+        void givenRoleOutsideEnum_whenChanging_thenReturns400AndSkipsUseCase() throws Exception {
+            // Given — a role value the enum does not define
+            var request = new ChangeRoleRequest("SUPERUSER");
+
+            // When / Then
+            mockMvc.perform(patch("/users/{id}/role", USER_ID)
+                    .header("X-User-Id", ADMIN_ID)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+            verifyNoInteractions(changeUserRole);
         }
     }
 
