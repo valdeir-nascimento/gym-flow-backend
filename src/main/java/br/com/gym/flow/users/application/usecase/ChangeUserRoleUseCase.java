@@ -16,12 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.util.Optional;
-import java.util.function.Function;
-
 
 @Service
 @RequiredArgsConstructor
-public class ChangeUserStatusUseCase implements CommandUseCase<ChangeUserStatusCommand, UserView> {
+public class ChangeUserRoleUseCase implements CommandUseCase<ChangeUserRoleCommand, UserView> {
 
     private final UserRepository repository;
     private final ApplicationEventPublisher events;
@@ -29,20 +27,8 @@ public class ChangeUserStatusUseCase implements CommandUseCase<ChangeUserStatusC
 
     @Override
     @Transactional
-    public Result<UserView> execute(ChangeUserStatusCommand command) {
-        UserStatus target = command.targetStatus();
-        Function<User, Result<Void>> transition = switch (target) {
-            case ACTIVE -> user -> user.activate(clock);
-            case INACTIVE -> user -> user.deactivate(clock);
-            case BLOCKED -> user -> user.block(clock);
-            case PENDING_FIRST_ACCESS -> user -> Result.failWith(ErrorCode.INVALID_USER_STATUS_TRANSITION);
-        };
-        boolean guardLastAdmin = target == UserStatus.INACTIVE || target == UserStatus.BLOCKED;
-        return apply(command, transition, guardLastAdmin);
-    }
-
-    private Result<UserView> apply(ChangeUserStatusCommand command, Function<User, Result<Void>> transition, boolean guardLastAdmin) {
-        // An administrator cannot change the status of their own account (422).
+    public Result<UserView> execute(final ChangeUserRoleCommand command) {
+        // An administrator cannot change the role of their own account (422).
         if (command.userId().equals(command.actorId())) {
             return Result.failWith(ErrorCode.USER_SELF_MANAGEMENT);
         }
@@ -53,15 +39,15 @@ public class ChangeUserStatusUseCase implements CommandUseCase<ChangeUserStatusC
         }
         User user = maybeUser.get();
 
-        // There must always be at least one active administrator (409).
-        if (guardLastAdmin
-            && user.role() == Role.ADMINISTRATOR
+        // Demoting the last active administrator would leave the system without one (409).
+        boolean demotingAdmin = user.role() == Role.ADMINISTRATOR
             && user.status() == UserStatus.ACTIVE
-            && repository.countActiveAdministrators() <= 1) {
+            && command.targetRole() != Role.ADMINISTRATOR;
+        if (demotingAdmin && repository.countActiveAdministrators() <= 1) {
             return Result.failWith(ErrorCode.USER_LAST_ADMINISTRATOR);
         }
 
-        Result<Void> outcome = transition.apply(user);
+        Result<Void> outcome = user.changeRole(command.targetRole(), clock);
         if (!outcome.isSuccess()) {
             return Result.failure(((Result.Failure<Void>) outcome).notification());
         }

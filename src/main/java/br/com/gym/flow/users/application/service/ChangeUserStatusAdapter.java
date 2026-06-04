@@ -25,23 +25,25 @@ class ChangeUserStatusAdapter implements ChangeUserStatusPort {
 
     private final ChangeUserStatusUseCase changeUserStatus;
 
+    // System-initiated transitions (no human actor) — the self-management guard
+    // (RF-012) does not apply, so the actor is null.
     @Override
     public Result<UserView> activate(UUID userId) {
-        return changeUserStatus.execute(new ChangeUserStatusCommand(UserId.of(userId), UserStatus.ACTIVE));
+        return changeUserStatus.execute(new ChangeUserStatusCommand(UserId.of(userId), UserStatus.ACTIVE, null));
     }
 
     @Override
     public Result<UserView> deactivate(UUID userId) {
-        return changeUserStatus.execute(new ChangeUserStatusCommand(UserId.of(userId), UserStatus.INACTIVE));
+        return changeUserStatus.execute(new ChangeUserStatusCommand(UserId.of(userId), UserStatus.INACTIVE, null));
     }
 
     @Override
     public Result<UserView> block(UUID userId) {
-        return changeUserStatus.execute(new ChangeUserStatusCommand(UserId.of(userId), UserStatus.BLOCKED));
+        return changeUserStatus.execute(new ChangeUserStatusCommand(UserId.of(userId), UserStatus.BLOCKED, null));
     }
 
     @Override
     public Result<UserView> unblock(UUID userId) {
-        return changeUserStatus.execute(new ChangeUserStatusCommand(UserId.of(userId), UserStatus.ACTIVE));
+        return changeUserStatus.execute(new ChangeUserStatusCommand(UserId.of(userId), UserStatus.ACTIVE, null));
     }
 }
