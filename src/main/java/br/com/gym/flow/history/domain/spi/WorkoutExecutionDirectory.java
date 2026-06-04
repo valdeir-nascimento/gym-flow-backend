@@ -12,4 +12,7 @@ import java.util.UUID;
 public interface WorkoutExecutionDirectory {
 
     List<WorkoutExecutionView> findByStudentInWindow(UUID studentId, Instant from, Instant to);
+
+    /** Activity summary (count + last start) per student, batched (RF-010). */
+    List<WorkoutActivitySummary> summariesOf(java.util.Collection<UUID> studentIds);
 }

@@ -12,7 +12,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 @RequiredArgsConstructor
@@ -30,6 +33,12 @@ class UserRepositoryAdapter implements UserRepository {
     @Override
     public Optional<User> findById(UserId id) {
         return jpa.findById(id.value()).map(UserJpaMapper::toDomain);
+    }
+
+    @Override
+    public List<User> findByIds(Collection<UserId> ids) {
+        List<UUID> rawIds = ids.stream().map(UserId::value).toList();
+        return jpa.findAllById(rawIds).stream().map(UserJpaMapper::toDomain).toList();
     }
 
     @Override

@@ -4,12 +4,14 @@ import br.com.gym.flow.history.domain.WorkoutExecution;
 import br.com.gym.flow.history.domain.WorkoutExecutionFilter;
 import br.com.gym.flow.history.domain.WorkoutExecutionId;
 import br.com.gym.flow.history.domain.WorkoutExecutionRepository;
+import br.com.gym.flow.history.domain.spi.WorkoutActivitySummary;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -68,6 +70,19 @@ class WorkoutExecutionRepositoryAdapter implements WorkoutExecutionRepository {
             itemsFor(rows.stream().map(entity -> entity.id).toList());
         return rows.stream()
             .map(entity -> WorkoutExecutionJpaMapper.toDomain(entity, itemsByExecution.getOrDefault(entity.id, List.of())))
+            .toList();
+    }
+
+    @Override
+    public List<WorkoutActivitySummary> summariesOf(final Collection<UUID> studentIds) {
+        if (studentIds.isEmpty()) {
+            return List.of();
+        }
+        return executions.aggregateActivityByStudent(studentIds).stream()
+            .map(row -> new WorkoutActivitySummary(
+                (UUID) row[0],
+                ((Number) row[1]).longValue(),
+                (Instant) row[2]))
             .toList();
     }
 

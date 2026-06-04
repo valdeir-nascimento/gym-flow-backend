@@ -1,5 +1,7 @@
 package br.com.gym.flow.users.domain.spi;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -11,4 +13,10 @@ import java.util.UUID;
 public interface UserDirectory {
 
     Optional<UserView> findById(UUID userId);
+
+    /** Batch lookup by ids (RF-010): resolves several users in one round-trip. */
+    List<UserView> findByIds(Collection<UUID> userIds);
+
+    /** All users with the STUDENT role (RF-010: an administrator accompanies everyone). */
+    List<UserView> findStudents();
 }
