@@ -10,4 +10,7 @@ public interface RefreshTokenRepository {
     Optional<RefreshToken> findByTokenHash(String tokenHash);
 
     int revokeAllByUserId(UUID userId);
+
+    /** Revokes the user's active refresh tokens except the one with {@code keepTokenHash} (RF-015). */
+    int revokeAllByUserIdExcept(UUID userId, String keepTokenHash);
 }

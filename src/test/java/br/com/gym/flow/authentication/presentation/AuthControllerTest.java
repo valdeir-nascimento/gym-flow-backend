@@ -3,6 +3,8 @@ package br.com.gym.flow.authentication.presentation;
 import br.com.gym.flow.api.security.JwtAuthenticationFilter;
 import br.com.gym.flow.api.support.ratelimit.RateLimitFilter;
 import br.com.gym.flow.authentication.application.usecase.AuthenticateUserUseCase;
+import br.com.gym.flow.authentication.application.usecase.ChangeOwnPasswordCommand;
+import br.com.gym.flow.authentication.application.usecase.ChangeOwnPasswordUseCase;
 import br.com.gym.flow.authentication.application.usecase.ConsumeInviteCommand;
 import br.com.gym.flow.authentication.application.usecase.ConsumeInviteUseCase;
 import br.com.gym.flow.authentication.application.usecase.LoginCommand;
@@ -74,6 +76,8 @@ class AuthControllerTest {
     private RequestPasswordRecoveryUseCase requestPasswordRecovery;
     @MockitoBean
     private ResetPasswordUseCase resetPassword;
+    @MockitoBean
+    private ChangeOwnPasswordUseCase changeOwnPassword;
 
     private static TokenPairView tokenPair() {
         return new TokenPairView("access-jwt", "raw-refresh",
@@ -345,6 +349,70 @@ class AuthControllerTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(json(new ResetPasswordRequest(PASSWORD, PASSWORD))))
                 .andExpect(status().isGone());
+        }
+    }
+
+    @Nested
+    class ChangePassword {
+
+        @Test
+        void givenValidChange_whenChanging_thenReturns204AndMapsCommand() throws Exception {
+            // Given
+            when(changeOwnPassword.execute(any())).thenReturn(Result.ok());
+            var request = new ChangePasswordRequest("OldPass@99", PASSWORD, PASSWORD, "raw-refresh");
+
+            // When / Then
+            mockMvc.perform(post("/auth/change-password")
+                    .header("X-User-Id", USER_ID)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(json(request)))
+                .andExpect(status().isNoContent());
+
+            // Then — header user + body mapped into the command
+            var captor = ArgumentCaptor.forClass(ChangeOwnPasswordCommand.class);
+            verify(changeOwnPassword).execute(captor.capture());
+            assertThat(captor.getValue().userId()).isEqualTo(USER_ID);
+            assertThat(captor.getValue().currentPassword()).isEqualTo("OldPass@99");
+            assertThat(captor.getValue().newPassword()).isEqualTo(PASSWORD);
+            assertThat(captor.getValue().currentRefreshToken()).isEqualTo("raw-refresh");
+        }
+
+        @Test
+        void givenWrongCurrentPassword_whenChanging_thenReturns401() throws Exception {
+            // Given
+            when(changeOwnPassword.execute(any())).thenReturn(Result.failWith(ErrorCode.INVALID_CREDENTIALS));
+
+            // When / Then
+            mockMvc.perform(post("/auth/change-password")
+                    .header("X-User-Id", USER_ID)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(json(new ChangePasswordRequest("wrong", PASSWORD, PASSWORD, "raw-refresh"))))
+                .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        void givenWeakOrReusedPassword_whenChanging_thenReturns422() throws Exception {
+            // Given — BUSINESS_RULE -> 422
+            when(changeOwnPassword.execute(any())).thenReturn(Result.failWith(ErrorCode.WEAK_PASSWORD));
+
+            // When / Then
+            mockMvc.perform(post("/auth/change-password")
+                    .header("X-User-Id", USER_ID)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(json(new ChangePasswordRequest("OldPass@99", PASSWORD, PASSWORD, "raw-refresh"))))
+                .andExpect(status().isUnprocessableEntity());
+        }
+
+        @Test
+        void givenBlankField_whenChanging_thenReturns400AndSkipsUseCase() throws Exception {
+            // Given — @NotBlank newPassword violated
+            mockMvc.perform(post("/auth/change-password")
+                    .header("X-User-Id", USER_ID)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(json(new ChangePasswordRequest("OldPass@99", "", PASSWORD, "raw-refresh"))))
+                .andExpect(status().isBadRequest());
+
+            verifyNoInteractions(changeOwnPassword);
         }
     }
 }
