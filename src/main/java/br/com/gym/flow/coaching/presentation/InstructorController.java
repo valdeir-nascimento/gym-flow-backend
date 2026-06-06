@@ -7,8 +7,6 @@ import br.com.gym.flow.coaching.application.usecase.ListManagedStudentsUseCase;
 import br.com.gym.flow.coaching.domain.spi.ManagedStudentView;
 import br.com.gym.flow.evolution.domain.spi.EvolutionReport;
 import br.com.gym.flow.shared.domain.Result;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,15 +28,16 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/instructor/students")
 @RequiredArgsConstructor
-class InstructorController {
+class InstructorController implements InstructorApi {
 
     private final ListManagedStudentsUseCase listManagedStudents;
     private final GetManagedStudentUseCase getManagedStudent;
 
+    @Override
     @GetMapping
-    Result<Page<ManagedStudentView>> list(
-        @RequestParam(defaultValue = "0") @Min(0) int page,
-        @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+    public Result<Page<ManagedStudentView>> list(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size,
         @RequestHeader("X-User-Id") UUID instructorId,
         @RequestHeader("X-User-Role") String actorRole
     ) {
@@ -46,8 +45,9 @@ class InstructorController {
             new ListManagedStudentsQuery(instructorId, actorRole, PageRequest.of(page, size)));
     }
 
+    @Override
     @GetMapping("/{studentId}")
-    Result<EvolutionReport> getOne(
+    public Result<EvolutionReport> getOne(
         @PathVariable UUID studentId,
         @RequestHeader("X-User-Id") UUID instructorId,
         @RequestHeader("X-User-Role") String actorRole

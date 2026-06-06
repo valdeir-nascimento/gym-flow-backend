@@ -36,7 +36,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/users/bonds")
 @RequiredArgsConstructor
-class BondController {
+class BondController implements BondApi {
 
     private final AssignStudentToInstructorUseCase assignStudentToInstructor;
     private final TransferBondUseCase transferBond;
@@ -45,7 +45,8 @@ class BondController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    Result<BondView> assign(@Valid @RequestBody AssignBondRequest req, HttpServletResponse response) {
+    @Override
+    public Result<BondView> assign(@Valid @RequestBody AssignBondRequest req, HttpServletResponse response) {
         Result<BondView> result = assignStudentToInstructor.execute(new AssignStudentToInstructorCommand(
             UserId.of(req.studentId()), UserId.of(req.instructorId()), UserId.of(req.createdBy())));
         if (result.isSuccess()) {
@@ -55,13 +56,15 @@ class BondController {
     }
 
     @PutMapping("/transfer")
-    Result<BondView> transfer(@Valid @RequestBody TransferBondRequest req) {
+    @Override
+    public Result<BondView> transfer(@Valid @RequestBody TransferBondRequest req) {
         return transferBond.execute(new TransferBondCommand(
             UserId.of(req.studentId()), UserId.of(req.newInstructorId()), UserId.of(req.actor())));
     }
 
     @DeleteMapping("/{id}")
-    Result<BondView> remove(@PathVariable UUID id,
+    @Override
+    public Result<BondView> remove(@PathVariable UUID id,
                             @RequestHeader("X-User-Id") UUID actorId,
                             @RequestHeader(value = "X-User-Role", required = false) String actorRole) {
         boolean restrict = "INSTRUCTOR".equals(actorRole);
@@ -69,7 +72,8 @@ class BondController {
     }
 
     @GetMapping
-    Result<Page<BondView>> list(@RequestParam(required = false) UUID instructorId,
+    @Override
+    public Result<Page<BondView>> list(@RequestParam(required = false) UUID instructorId,
                                 @RequestParam(required = false) UUID studentId,
                                 Pageable pageable) {
         UserId instructor = instructorId == null ? null : UserId.of(instructorId);

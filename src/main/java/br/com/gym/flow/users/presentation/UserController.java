@@ -43,7 +43,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
-class UserController {
+class UserController implements UserApi {
 
     private final RegisterStudentUseCase registerStudent;
     private final RegisterInstructorUseCase registerInstructor;
@@ -55,7 +55,8 @@ class UserController {
 
     @PostMapping("/students")
     @ResponseStatus(HttpStatus.CREATED)
-    Result<UserView> registerStudent(@Valid @RequestBody RegisterStudentRequest req, HttpServletResponse response) {
+    @Override
+    public Result<UserView> registerStudent(@Valid @RequestBody RegisterStudentRequest req, HttpServletResponse response) {
         final Role role;
         try {
             role = req.createdByRole() == null ? null : Role.valueOf(req.createdByRole());
@@ -71,7 +72,8 @@ class UserController {
 
     @PostMapping("/instructors")
     @ResponseStatus(HttpStatus.CREATED)
-    Result<UserView> registerInstructor(@Valid @RequestBody RegisterInstructorRequest req, HttpServletResponse response) {
+    @Override
+    public Result<UserView> registerInstructor(@Valid @RequestBody RegisterInstructorRequest req, HttpServletResponse response) {
         UserId createdBy = req.createdBy() == null ? null : UserId.of(req.createdBy());
         Result<UserView> result = registerInstructor.execute(new RegisterInstructorCommand(
             req.name(), req.email(), req.phone(), req.birthDate(), createdBy));
@@ -87,7 +89,8 @@ class UserController {
     }
 
     @GetMapping
-    Result<Page<UserView>> list(@RequestParam(required = false) Role role,
+    @Override
+    public Result<Page<UserView>> list(@RequestParam(required = false) Role role,
                                 @RequestParam(required = false) UserStatus status,
                                 @RequestParam(required = false) String search,
                                 Pageable pageable) {
@@ -95,12 +98,14 @@ class UserController {
     }
 
     @GetMapping("/{id}")
-    Result<UserView> getById(@PathVariable UUID id) {
+    @Override
+    public Result<UserView> getById(@PathVariable UUID id) {
         return getUser.execute(new GetUserQuery(UserId.of(id)));
     }
 
     @PatchMapping("/{id}/status")
-    Result<UserView> changeStatus(@PathVariable UUID id,
+    @Override
+    public Result<UserView> changeStatus(@PathVariable UUID id,
                                   @Valid @RequestBody ChangeStatusRequest req,
                                   @RequestHeader("X-User-Id") UUID actorId) {
         final UserStatus target;
@@ -113,7 +118,8 @@ class UserController {
     }
 
     @PatchMapping("/{id}/role")
-    Result<UserView> changeRole(@PathVariable UUID id,
+    @Override
+    public Result<UserView> changeRole(@PathVariable UUID id,
                                 @Valid @RequestBody ChangeRoleRequest req,
                                 @RequestHeader("X-User-Id") UUID actorId) {
         final Role target;
@@ -125,13 +131,15 @@ class UserController {
         return changeUserRole.execute(new ChangeUserRoleCommand(UserId.of(id), target, UserId.of(actorId)));
     }
 
+    @Override
     @GetMapping("/me")
-    Result<UserView> me(@RequestHeader("X-User-Id") UUID currentUserId) {
+    public Result<UserView> me(@RequestHeader("X-User-Id") UUID currentUserId) {
         return getUser.execute(new GetUserQuery(UserId.of(currentUserId)));
     }
 
+    @Override
     @PatchMapping("/me")
-    Result<UserView> updateMe(@RequestHeader("X-User-Id") UUID currentUserId,
+    public Result<UserView> updateMe(@RequestHeader("X-User-Id") UUID currentUserId,
                               @Valid @RequestBody UpdateOwnProfileRequest req) {
         return updateOwnProfile.execute(new UpdateOwnProfileCommand(
             UserId.of(currentUserId), req.name(), req.phone(), req.birthDate()));

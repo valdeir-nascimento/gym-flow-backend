@@ -7,8 +7,6 @@ import br.com.gym.flow.history.application.usecase.ListWorkoutExecutionsUseCase;
 import br.com.gym.flow.history.domain.WorkoutExecutionId;
 import br.com.gym.flow.history.domain.spi.WorkoutExecutionView;
 import br.com.gym.flow.shared.domain.Result;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,20 +30,21 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/workout-executions")
 @RequiredArgsConstructor
-class WorkoutExecutionQueryController {
+class WorkoutExecutionQueryController implements WorkoutExecutionQueryApi {
 
     private final ListWorkoutExecutionsUseCase listExecutions;
     private final GetWorkoutExecutionUseCase getExecution;
 
+    @Override
     @GetMapping
-    Result<Page<WorkoutExecutionView>> list(
+    public Result<Page<WorkoutExecutionView>> list(
         @RequestParam UUID studentId,
         @RequestParam(required = false) UUID trainingId,
         @RequestParam(required = false) UUID exerciseId,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant startedFrom,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant startedTo,
-        @RequestParam(defaultValue = "0") @Min(0) int page,
-        @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size,
         @RequestHeader("X-User-Id") UUID actorId,
         @RequestHeader("X-User-Role") String actorRole
     ) {
@@ -54,8 +53,9 @@ class WorkoutExecutionQueryController {
             studentId, trainingId, exerciseId, startedFrom, startedTo, actorId, actorRole, pageable));
     }
 
+    @Override
     @GetMapping("/{id}")
-    Result<WorkoutExecutionView> getById(
+    public Result<WorkoutExecutionView> getById(
         @PathVariable UUID id,
         @RequestHeader("X-User-Id") UUID actorId,
         @RequestHeader("X-User-Role") String actorRole

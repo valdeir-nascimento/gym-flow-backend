@@ -37,7 +37,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/users/{studentId}")
 @RequiredArgsConstructor
-class AnamnesisController {
+class AnamnesisController implements AnamnesisApi {
 
     private final RegisterAnamnesisUseCase registerAnamnesis;
     private final GetLatestAnamnesisUseCase getLatestAnamnesis;
@@ -46,7 +46,8 @@ class AnamnesisController {
 
     @PostMapping("/health-consent")
     @ResponseStatus(HttpStatus.CREATED)
-    Result<HealthConsentView> grantConsent(@PathVariable UUID studentId,
+    @Override
+    public Result<HealthConsentView> grantConsent(@PathVariable UUID studentId,
                                            @RequestHeader("X-User-Id") UUID actorId,
                                            @RequestHeader("X-User-Role") String actorRole) {
         return grantHealthConsent.execute(new GrantHealthConsentCommand(studentId, actorId, actorRole));
@@ -54,7 +55,8 @@ class AnamnesisController {
 
     @PostMapping("/anamnesis")
     @ResponseStatus(HttpStatus.CREATED)
-    Result<AnamnesisView> register(@PathVariable UUID studentId,
+    @Override
+    public Result<AnamnesisView> register(@PathVariable UUID studentId,
                                    @Valid @RequestBody RegisterAnamnesisRequest req,
                                    @RequestHeader("X-User-Id") UUID actorId,
                                    @RequestHeader("X-User-Role") String actorRole,
@@ -71,14 +73,16 @@ class AnamnesisController {
     }
 
     @GetMapping("/anamnesis")
-    Result<AnamnesisView> latest(@PathVariable UUID studentId,
+    @Override
+    public Result<AnamnesisView> latest(@PathVariable UUID studentId,
                                  @RequestHeader("X-User-Id") UUID actorId,
                                  @RequestHeader("X-User-Role") String actorRole) {
         return getLatestAnamnesis.execute(new GetLatestAnamnesisQuery(studentId, actorId, actorRole));
     }
 
     @GetMapping("/anamnesis/history")
-    Result<List<AnamnesisView>> history(@PathVariable UUID studentId,
+    @Override
+    public Result<List<AnamnesisView>> history(@PathVariable UUID studentId,
                                         @RequestHeader("X-User-Id") UUID actorId,
                                         @RequestHeader("X-User-Role") String actorRole) {
         return listAnamnesisHistory.execute(new ListAnamnesisHistoryQuery(studentId, actorId, actorRole));
