@@ -10,6 +10,7 @@ import br.com.gym.flow.trainings.domain.TrainingDraft;
 import br.com.gym.flow.trainings.domain.TrainingRepository;
 import br.com.gym.flow.trainings.domain.TrainingValidator;
 import br.com.gym.flow.trainings.domain.spi.TrainingView;
+import br.com.gym.flow.users.domain.spi.AnamnesisDirectory;
 import br.com.gym.flow.users.domain.spi.TeacherStudentDirectory;
 import br.com.gym.flow.users.domain.spi.UserDirectory;
 import br.com.gym.flow.users.domain.spi.UserView;
@@ -32,6 +33,7 @@ public class CreateTrainingUseCase implements CommandUseCase<CreateTrainingComma
     private final UserDirectory users;
     private final TeacherStudentDirectory bonds;
     private final ExerciseCatalog catalog;
+    private final AnamnesisDirectory anamnesis;
     private final ApplicationEventPublisher events;
     private final Clock clock;
 
@@ -64,6 +66,13 @@ public class CreateTrainingUseCase implements CommandUseCase<CreateTrainingComma
         Result<Void> exercises = CatalogChecks.allExercisesActive(catalog, draft.items());
         if (!exercises.isSuccess()) {
             return Result.failure(((Result.Failure<Void>) exercises).notification());
+        }
+
+        // No exercise contraindicated for the student by their anamnesis (422).
+        Result<Void> contraindications = CatalogChecks.noContraindicatedExercises(
+            anamnesis, command.studentId(), draft.items());
+        if (!contraindications.isSuccess()) {
+            return Result.failure(((Result.Failure<Void>) contraindications).notification());
         }
 
         // No overlapping active training for the same student (422).

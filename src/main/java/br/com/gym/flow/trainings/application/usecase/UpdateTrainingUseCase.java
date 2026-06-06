@@ -10,6 +10,7 @@ import br.com.gym.flow.trainings.domain.TrainingDraft;
 import br.com.gym.flow.trainings.domain.TrainingRepository;
 import br.com.gym.flow.trainings.domain.TrainingValidator;
 import br.com.gym.flow.trainings.domain.spi.TrainingView;
+import br.com.gym.flow.users.domain.spi.AnamnesisDirectory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ public class UpdateTrainingUseCase implements CommandUseCase<UpdateTrainingComma
 
     private final TrainingRepository trainings;
     private final ExerciseCatalog catalog;
+    private final AnamnesisDirectory anamnesis;
     private final ApplicationEventPublisher events;
     private final Clock clock;
 
@@ -52,6 +54,13 @@ public class UpdateTrainingUseCase implements CommandUseCase<UpdateTrainingComma
         Result<Void> exercises = CatalogChecks.allExercisesActive(catalog, draft.items());
         if (!exercises.isSuccess()) {
             return Result.failure(((Result.Failure<Void>) exercises).notification());
+        }
+
+        // No exercise contraindicated for the student by their anamnesis (422).
+        Result<Void> contraindications = CatalogChecks.noContraindicatedExercises(
+            anamnesis, training.studentId(), draft.items());
+        if (!contraindications.isSuccess()) {
+            return Result.failure(((Result.Failure<Void>) contraindications).notification());
         }
 
         // Domain applies the change (rejects ARCHIVED -> 409, keeps the ≥1-item invariant).

@@ -8,6 +8,7 @@ import br.com.gym.flow.shared.domain.Result;
 import br.com.gym.flow.trainings.domain.TrainingItem;
 import br.com.gym.flow.trainings.domain.TrainingRepository;
 import br.com.gym.flow.trainings.events.TrainingCreated;
+import br.com.gym.flow.users.domain.spi.AnamnesisDirectory;
 import br.com.gym.flow.users.domain.spi.TeacherStudentDirectory;
 import br.com.gym.flow.users.domain.spi.UserDirectory;
 import br.com.gym.flow.users.domain.spi.UserView;
@@ -55,13 +56,15 @@ class CreateTrainingUseCaseTest {
     @Mock
     private ExerciseCatalog catalog;
     @Mock
+    private AnamnesisDirectory anamnesis;
+    @Mock
     private ApplicationEventPublisher events;
 
     private CreateTrainingUseCase useCase;
 
     @BeforeEach
     void setUp() {
-        useCase = new CreateTrainingUseCase(trainings, users, bonds, catalog, events, CLOCK);
+        useCase = new CreateTrainingUseCase(trainings, users, bonds, catalog, anamnesis, events, CLOCK);
     }
 
     private static Notification failureOf(Result<?> result) {
@@ -178,6 +181,22 @@ class CreateTrainingUseCaseTest {
 
         // Then
         assertThat(failureOf(result).hasAnyCode(ErrorCode.TRAINING_OVERLAPPING_PERIOD)).isTrue();
+        verify(trainings, never()).save(any());
+    }
+
+    @Test
+    void givenContraindicatedExercise_whenCreating_thenFailsContraindicated() {
+        // Given — the exercise is active but contraindicated for the student (RF-017)
+        when(users.findById(STUDENT)).thenReturn(Optional.of(userView("ACTIVE")));
+        when(bonds.hasActiveBond(STUDENT, INSTRUCTOR)).thenReturn(true);
+        when(catalog.findById(EXERCISE)).thenReturn(Optional.of(exerciseView("ACTIVE")));
+        when(anamnesis.contraindicatedExercises(STUDENT)).thenReturn(List.of(EXERCISE));
+
+        // When
+        var result = useCase.execute(command("Treino A", "INSTRUCTOR"));
+
+        // Then — 422, nothing persisted
+        assertThat(failureOf(result).hasAnyCode(ErrorCode.TRAINING_CONTRAINDICATED_EXERCISE)).isTrue();
         verify(trainings, never()).save(any());
     }
 

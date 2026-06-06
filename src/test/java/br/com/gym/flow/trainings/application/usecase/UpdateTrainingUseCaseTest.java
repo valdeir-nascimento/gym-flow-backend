@@ -10,6 +10,7 @@ import br.com.gym.flow.trainings.domain.TrainingItem;
 import br.com.gym.flow.trainings.domain.TrainingRepository;
 import br.com.gym.flow.trainings.domain.TrainingStatus;
 import br.com.gym.flow.trainings.events.TrainingUpdated;
+import br.com.gym.flow.users.domain.spi.AnamnesisDirectory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +29,7 @@ import java.util.UUID;
 
 import static br.com.gym.flow.trainings.domain.TrainingTestBuilder.EXERCISE_ID;
 import static br.com.gym.flow.trainings.domain.TrainingTestBuilder.INSTRUCTOR_ID;
+import static br.com.gym.flow.trainings.domain.TrainingTestBuilder.STUDENT_ID;
 import static br.com.gym.flow.trainings.domain.TrainingTestBuilder.aTraining;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
@@ -50,13 +52,15 @@ class UpdateTrainingUseCaseTest {
     @Mock
     private ExerciseCatalog catalog;
     @Mock
+    private AnamnesisDirectory anamnesis;
+    @Mock
     private ApplicationEventPublisher events;
 
     private UpdateTrainingUseCase useCase;
 
     @BeforeEach
     void setUp() {
-        useCase = new UpdateTrainingUseCase(trainings, catalog, events, CLOCK);
+        useCase = new UpdateTrainingUseCase(trainings, catalog, anamnesis, events, CLOCK);
     }
 
     private static Notification failureOf(Result<?> result) {
@@ -176,5 +180,20 @@ class UpdateTrainingUseCaseTest {
         assertThat(result.getOrThrow().name()).isEqualTo("Treino B");
         verify(trainings).save(any());
         verify(events).publishEvent(any(TrainingUpdated.class));
+    }
+
+    @Test
+    void givenContraindicatedExercise_whenUpdating_thenFailsContraindicated() {
+        // Given — owner, exercise active, but contraindicated for the student (RF-017)
+        when(trainings.findById(TRAINING_ID)).thenReturn(Optional.of(aTraining().withId(TRAINING_ID).build()));
+        when(catalog.findById(EXERCISE_ID)).thenReturn(Optional.of(activeExercise()));
+        when(anamnesis.contraindicatedExercises(STUDENT_ID)).thenReturn(List.of(EXERCISE_ID));
+
+        // When
+        var result = useCase.execute(command("Treino B", null, INSTRUCTOR_ID, "INSTRUCTOR"));
+
+        // Then — 422, nothing persisted
+        assertThat(failureOf(result).hasAnyCode(ErrorCode.TRAINING_CONTRAINDICATED_EXERCISE)).isTrue();
+        verify(trainings, never()).save(any());
     }
 }

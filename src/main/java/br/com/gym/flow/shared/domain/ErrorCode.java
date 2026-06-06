@@ -43,6 +43,7 @@ public enum ErrorCode {
     TRAINING_ARCHIVED(ErrorCategory.CONFLICT, "treino arquivado não pode ser editado"),
     TRAINING_STUDENT_INACTIVE(ErrorCategory.BUSINESS_RULE, "aluno inativo não pode receber treino"),
     TRAINING_INACTIVE_EXERCISE(ErrorCategory.BUSINESS_RULE, "exercício inativo não pode compor o treino"),
+    TRAINING_CONTRAINDICATED_EXERCISE(ErrorCategory.BUSINESS_RULE, "exercício contraindicado para o aluno não pode compor o treino"),
     TRAINING_OVERLAPPING_PERIOD(ErrorCategory.BUSINESS_RULE, "já existe treino ativo com vigência sobreposta"),
 
     // Workout execution / history (RF-007, RF-009)
