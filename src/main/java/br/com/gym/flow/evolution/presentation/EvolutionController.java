@@ -25,12 +25,13 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/evolution")
 @RequiredArgsConstructor
-class EvolutionController {
+class EvolutionController implements EvolutionApi {
 
     private final GetStudentEvolutionUseCase getEvolution;
 
+    @Override
     @GetMapping
-    Result<EvolutionReport> getEvolution(
+    public Result<EvolutionReport> getEvolution(
         @RequestParam UUID studentId,
         @RequestParam(defaultValue = "WEEKLY") Granularity granularity,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,

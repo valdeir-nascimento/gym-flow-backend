@@ -40,7 +40,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/exercises")
 @RequiredArgsConstructor
-class ExerciseController {
+class ExerciseController implements ExerciseApi {
 
     private final RegisterExerciseUseCase registerExercise;
     private final UpdateExerciseUseCase updateExercise;
@@ -50,7 +50,8 @@ class ExerciseController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    Result<ExerciseView> register(@Valid @RequestBody RegisterExerciseRequest req,
+    @Override
+    public Result<ExerciseView> register(@Valid @RequestBody RegisterExerciseRequest req,
                                   @RequestHeader("X-User-Id") UUID actorId,
                                   @RequestHeader("X-User-Role") String actorRole,
                                   HttpServletResponse response) {
@@ -64,7 +65,8 @@ class ExerciseController {
     }
 
     @PutMapping("/{id}")
-    Result<ExerciseView> update(@PathVariable UUID id,
+    @Override
+    public Result<ExerciseView> update(@PathVariable UUID id,
                                 @Valid @RequestBody UpdateExerciseRequest req,
                                 @RequestHeader("X-User-Role") String actorRole) {
         return updateExercise.execute(new UpdateExerciseCommand(
@@ -73,13 +75,15 @@ class ExerciseController {
     }
 
     @PatchMapping("/{id}/deactivate")
-    Result<ExerciseView> deactivate(@PathVariable UUID id,
+    @Override
+    public Result<ExerciseView> deactivate(@PathVariable UUID id,
                                     @RequestHeader("X-User-Role") String actorRole) {
         return deactivateExercise.execute(new DeactivateExerciseCommand(ExerciseId.of(id), actorRole));
     }
 
     @GetMapping
-    Result<Page<ExerciseView>> list(@RequestParam(required = false) MuscleGroup muscleGroup,
+    @Override
+    public Result<Page<ExerciseView>> list(@RequestParam(required = false) MuscleGroup muscleGroup,
                                     @RequestParam(required = false) DifficultyLevel difficultyLevel,
                                     @RequestParam(required = false) String equipment,
                                     @RequestParam(required = false) String search,
@@ -90,7 +94,8 @@ class ExerciseController {
     }
 
     @GetMapping("/{id}")
-    Result<ExerciseView> getById(@PathVariable UUID id) {
+    @Override
+    public Result<ExerciseView> getById(@PathVariable UUID id) {
         return getExercise.execute(new GetExerciseQuery(ExerciseId.of(id)));
     }
 }

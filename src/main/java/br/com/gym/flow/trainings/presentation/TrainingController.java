@@ -36,7 +36,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/trainings")
 @RequiredArgsConstructor
-class TrainingController {
+class TrainingController implements TrainingApi {
 
     private final CreateTrainingUseCase createTraining;
     private final UpdateTrainingUseCase updateTraining;
@@ -45,7 +45,8 @@ class TrainingController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    Result<TrainingView> create(@Valid @RequestBody CreateTrainingRequest req,
+    @Override
+    public Result<TrainingView> create(@Valid @RequestBody CreateTrainingRequest req,
                                 @RequestHeader("X-User-Id") UUID instructorId,
                                 @RequestHeader("X-User-Role") String actorRole,
                                 HttpServletResponse response) {
@@ -61,7 +62,8 @@ class TrainingController {
     }
 
     @PutMapping("/{id}")
-    Result<TrainingView> update(@PathVariable UUID id,
+    @Override
+    public Result<TrainingView> update(@PathVariable UUID id,
                                 @Valid @RequestBody UpdateTrainingRequest req,
                                 @RequestHeader("X-User-Id") UUID actorId,
                                 @RequestHeader("X-User-Role") String actorRole) {
@@ -74,7 +76,8 @@ class TrainingController {
     }
 
     @GetMapping
-    Result<Page<TrainingView>> listByStudent(@RequestParam UUID studentId,
+    @Override
+    public Result<Page<TrainingView>> listByStudent(@RequestParam UUID studentId,
                                              @RequestHeader("X-User-Id") UUID actorId,
                                              @RequestHeader("X-User-Role") String actorRole,
                                              Pageable pageable) {
@@ -83,7 +86,8 @@ class TrainingController {
     }
 
     @GetMapping("/{id}")
-    Result<TrainingView> getById(@PathVariable UUID id) {
+    @Override
+    public Result<TrainingView> getById(@PathVariable UUID id) {
         return getTraining.execute(new GetTrainingQuery(TrainingId.of(id)));
     }
 }

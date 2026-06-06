@@ -24,13 +24,14 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/trainings/{trainingId}/executions")
 @RequiredArgsConstructor
-class WorkoutExecutionController {
+class WorkoutExecutionController implements WorkoutExecutionApi {
 
     private final RegisterWorkoutExecutionUseCase registerExecution;
 
+    @Override
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    Result<WorkoutExecutionView> register(
+    public Result<WorkoutExecutionView> register(
         @PathVariable UUID trainingId,
         @Valid @RequestBody RegisterWorkoutExecutionRequest req,
         @RequestHeader("X-User-Id") UUID actorId,

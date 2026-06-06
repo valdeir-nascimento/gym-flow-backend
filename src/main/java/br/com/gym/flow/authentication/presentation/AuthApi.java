@@ -91,7 +91,16 @@ interface AuthApi {
         description = "Rotaciona o refresh token, retornando um novo par. Endpoint público.")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Novo par de tokens",
-            content = @Content(schema = @Schema(implementation = TokenPairView.class))),
+            content = @Content(schema = @Schema(implementation = TokenPairView.class),
+                examples = @ExampleObject(value = """
+                    {
+                      "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMTExMTExMS4uLiJ9.sig",
+                      "refreshToken": "0b1c2d3e-4f50-4a61-b2c3-1d2e3f4a5b6c",
+                      "accessTokenExpiresAt": "2026-06-05T21:00:00Z",
+                      "refreshTokenExpiresAt": "2026-06-12T20:30:00Z",
+                      "userId": "11111111-1111-1111-1111-111111111111",
+                      "role": "ADMINISTRATOR"
+                    }"""))),
         @ApiResponse(responseCode = "401", description = "Refresh token inválido ou expirado",
             content = @Content(mediaType = PROBLEM_JSON, schema = @Schema(implementation = ApiErrorResponse.class),
                 examples = @ExampleObject(name = "Refresh inválido", value = """
