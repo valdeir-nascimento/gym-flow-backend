@@ -34,7 +34,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-class AuthController {
+class AuthController implements AuthApi {
 
     private final AuthenticateUserUseCase authenticateUser;
     private final RefreshTokenUseCase refreshToken;
@@ -44,50 +44,57 @@ class AuthController {
     private final ResetPasswordUseCase resetPassword;
     private final ChangeOwnPasswordUseCase changeOwnPassword;
 
+    @Override
     @PostMapping("/login")
-    Result<TokenPairView> login(@Valid @RequestBody LoginRequest req, HttpServletRequest http) {
+    public Result<TokenPairView> login(@Valid @RequestBody LoginRequest req, HttpServletRequest http) {
         return authenticateUser.execute(
             new LoginCommand(req.email(), req.password(), ClientIp.resolve(http)));
     }
 
+    @Override
     @PostMapping("/refresh")
-    Result<TokenPairView> refresh(@Valid @RequestBody RefreshRequest req) {
+    public Result<TokenPairView> refresh(@Valid @RequestBody RefreshRequest req) {
         return refreshToken.execute(new RefreshTokenCommand(req.refreshToken()));
     }
 
+    @Override
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    Result<Void> logout(@Valid @RequestBody RefreshRequest req) {
+    public Result<Void> logout(@Valid @RequestBody RefreshRequest req) {
         return logout.execute(new LogoutCommand(req.refreshToken()));
     }
 
+    @Override
     @PostMapping("/invites/{token}/consume")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    Result<Void> consumeInvite(@PathVariable String token,
-                               @Valid @RequestBody ConsumeInviteRequest req,
-                               HttpServletRequest http) {
+    public Result<Void> consumeInvite(@PathVariable String token,
+                                      @Valid @RequestBody ConsumeInviteRequest req,
+                                      HttpServletRequest http) {
         return consumeInvite.execute(new ConsumeInviteCommand(
             token, req.newPassword(), req.passwordConfirmation(), ClientIp.resolve(http)));
     }
 
+    @Override
     @PostMapping("/password-recovery")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    Result<Void> requestRecovery(@Valid @RequestBody RecoveryRequest req) {
+    public Result<Void> requestRecovery(@Valid @RequestBody RecoveryRequest req) {
         return requestPasswordRecovery.execute(new RecoveryRequestCommand(req.email()));
     }
 
+    @Override
     @PostMapping("/password-reset/{token}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    Result<Void> resetPassword(@PathVariable String token,
-                               @Valid @RequestBody ResetPasswordRequest req) {
+    public Result<Void> resetPassword(@PathVariable String token,
+                                      @Valid @RequestBody ResetPasswordRequest req) {
         return resetPassword.execute(new ResetPasswordCommand(
             token, req.newPassword(), req.passwordConfirmation()));
     }
 
+    @Override
     @PostMapping("/change-password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    Result<Void> changePassword(@Valid @RequestBody ChangePasswordRequest req,
-                                @RequestHeader("X-User-Id") UUID userId) {
+    public Result<Void> changePassword(@Valid @RequestBody ChangePasswordRequest req,
+                                       @RequestHeader("X-User-Id") UUID userId) {
         return changeOwnPassword.execute(new ChangeOwnPasswordCommand(
             userId, req.currentPassword(), req.newPassword(), req.passwordConfirmation(), req.currentRefreshToken()));
     }
